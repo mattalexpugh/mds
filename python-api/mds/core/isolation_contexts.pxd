@@ -27,7 +27,7 @@ from libc.stdint cimport uint64_t
 from libcpp cimport bool
 from libcpp.vector cimport vector
 
-from mds.core.api_tasks cimport task_handle
+from mds.core.tasks cimport h_task_t
 
 cdef extern from "helpers.h" namespace "mds::python::isoctxts":
     cdef cppclass Use:
@@ -54,52 +54,51 @@ cdef extern from "core/core_fwd.h" namespace "mds::core" nogil:
 
 # Start actually importing the classes and methods we're going to need:
 cdef extern from "mds_core_api.h" namespace "mds::api" nogil:
-    cdef cppclass publication_attempt_handle :
-        publication_attempt_handle()
-        publication_attempt_handle(const publication_attempt_handle)
+    cdef cppclass h_pub_attempt_t "publication_attempt_handle":
+        h_pub_attempt_t()
+        h_pub_attempt_t(const h_pub_attempt_t)
 
-        iso_context_handle source_context()
+        h_isoctxt_t source_context()
 
-        vector[task_handle] redo_tasks_by_start_time()
+        vector[h_task_t] redo_tasks_by_start_time()
         long n_to_redo()
         bool prepare_for_redo()
         bool succeeded()
 
         uint64_t hash1()
 
-    cdef cppclass iso_context_handle:
-        iso_context_handle()
-        iso_context_handle(const iso_context_handle)
+    cdef cppclass h_isoctxt_t "iso_context_handle":
+        h_isoctxt_t()
+        h_isoctxt_t(const h_isoctxt_t)
 
         bool is_null()
         bool is_snapshot()
         bool is_read_only()
         bool is_publishable()
 
-        iso_context_handle parent()
+        h_isoctxt_t parent()
         # iso_context_handle ro_snapshot_at(core::timestamp_t ts)
 
         @staticmethod
-        iso_context_handle _global "global"()
+        h_isoctxt_t _global "global"()
 
         @staticmethod
-        iso_context_handle for_process()
+        h_isoctxt_t for_process()
 
         # iso_context_handle new_child(view_type vt, mod_type mt) except + 
-        iso_context_handle new_snapshot_child() except +
-        iso_context_handle new_nonsnapshot_child() except +
-        iso_context_handle new_detached_snapshot_child() except +
-        iso_context_handle new_detached_nonsnapshot_child() except + 
-        iso_context_handle new_read_only_snapshot_child() except +
-        iso_context_handle new_read_only_nonsnapshot_child() except +
+        h_isoctxt_t new_snapshot_child() except +
+        h_isoctxt_t new_nonsnapshot_child() except +
+        h_isoctxt_t new_detached_snapshot_child() except +
+        h_isoctxt_t new_detached_nonsnapshot_child() except +
+        h_isoctxt_t new_read_only_snapshot_child() except +
+        h_isoctxt_t new_read_only_nonsnapshot_child() except +
 
-        publication_attempt_handle publish()
+        h_pub_attempt_t publish()
         
-        task_handle push_prevailing()
-        task_handle top_level_task()
-        task_handle creation_task()
+        h_task_t push_prevailing()
+        h_task_t top_level_task()
+        h_task_t creation_task()
         
         bool has_conflicts()
 
         uint64_t hash1()
-

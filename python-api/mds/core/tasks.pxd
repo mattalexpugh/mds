@@ -26,8 +26,9 @@ provided you also meet the terms and conditions of the Application license.
 from libcpp cimport bool
 from libc.stdint cimport uint64_t
 
-from mds.core.api_isolation_contexts cimport iso_context_handle
+from mds.core.isolation_contexts cimport h_isoctxt_t
 
+# TODO: Deprecate / Remove
 cdef extern from "helpers.h" namespace "mds::python::tasks":
     cdef cppclass TaskWrapper:
         TaskWrapper() nogil except +
@@ -35,34 +36,35 @@ cdef extern from "helpers.h" namespace "mds::python::tasks":
         void run(void(*)(_py_callable_wrapper), _py_callable_wrapper) except+ 
 
         @staticmethod
-        task_handle get_current()
-        void set_current(task_handle)
+        h_task_t get_current()
+        void set_current(h_task_t)
 
     void initialize_base_task() nogil
 
+# TODO: Deprecate / Remove
 cdef extern from "helpers.h" namespace "mds::python::tasks::TaskWrapper" nogil:
     cdef cppclass Establish:
         Establish()
-        Establish(const task_handle&) except +
+        Establish(const h_task_t&) except +
 
 cdef extern from "mds_core_api.h" namespace "mds::api" nogil:
-    cdef cppclass task_handle:
+    cdef cppclass h_task_t:
         task_handle()
         
-        iso_context_handle get_context()
-        task_handle get_parent()
-        task_handle push()
+        h_isoctxt_t get_context()
+        h_task_t get_parent()
+        h_task_t push()
 
         @staticmethod
-        task_handle pop()
+        h_task_t pop()
 
         @staticmethod
-        task_handle default_task()
+        h_task_t default_task()
 
         @staticmethod
-        task_handle push_new()
+        h_task_t push_new()
 
-        void add_dependent(const task_handle&)
+        void add_dependent(const h_task_t&)
         void always_redo()
         void cannot_redo()
 

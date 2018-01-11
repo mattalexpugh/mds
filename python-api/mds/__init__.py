@@ -47,9 +47,9 @@ class MDSTypeInfo():
 
         self.title_record_field = f"{_MDS}{self.title}RecordField"
         self.title_record_field_reference = f"{_MDS}{self.title}RecordFieldReference"
-        self.title_const_record_field_reference = f"{_MDS}{self.title_const}RecordFieldReference"
+        self.title_c_record_field_reference = f"{_MDS}{self.title_const}RecordFieldReference"
         self.title_record_member = f"{_MDS}{self.title}RecordMember"
-        self.title_const_record_member = f"{_MDS}{self.title_const}RecordMember"
+        self.title_c_record_member = f"{_MDS}{self.title_const}RecordMember"
 
         # MDS core aliases (masking templated types)
         self.primitive = f"h_m{api}_t"
@@ -61,19 +61,19 @@ class MDSTypeInfo():
         self.array_record_field = f"h_rfield_array_{self.api}_t"
 
         # MDS core aliases (masking const templated types)
-        self.const_primitive = f"h_const_m{api}_t"
-        self.const_array = f"h_const_array_{api}_t"
-        self.const_managed_value = f"mv_const_{api}"
-        self.const_managed_array = f"h_const_marray_{api}_t"
-        self.f_const_managed_type_handle = f"const_managed_{api}_type_handle"
-        self.const_record_field = f"h_const_rfield_{api}_t"
-        self.const_array_record_field = f"h_const_rfield_array_{self.api}_t"
+        self.const_primitive = f"h_c_m{api}_t"
+        self.const_array = f"h_c_array_{api}_t"
+        self.const_managed_value = f"mv_c_{api}"
+        self.const_managed_array = f"h_c_marray_{api}_t"
+        self.f_c_managed_type_handle = f"const_managed_{api}_type_handle"
+        self.const_record_field = f"h_c_rfield_{api}_t"
+        self.const_array_record_field = f"h_c_rfield_array_{self.api}_t"
 
         self.f_downcast_marray = f"downcast_marray_{api}"
 
         self.kind = "mds::api::kind::{}".format(api.upper())
         self.f_create_array = f"create_{api}_marray"
-        self.f_create_const_array = f"create_const_{api}_marray"
+        self.f_create_c_array = f"create_const_{api}_marray"
         self.f_bind = f"bind_{api}"
         self.f_bind_array = f"bind_{api}_array"
         self.f_lookup = f"lookup_{api}"
@@ -225,9 +225,9 @@ class MDSArrayTypeInfo(MDSCompositeTypeInfo):
 
         # self.title_record_field = f"{_MDS}{self.title}RecordField"
         # self.title_record_field_reference = f"{_MDS}{self.title}RecordFieldReference"
-        # self.title_const_record_field_reference = f"{_MDS}{self.title_const}RecordFieldReference"
+        # self.title_c_record_field_reference = f"{_MDS}{self.title_const}RecordFieldReference"
         # self.title_record_member = f"{_MDS}{self.title}RecordMember"
-        # self.title_const_record_member = f"{_MDS}{self.title_const}RecordMember"
+        # self.title_c_record_member = f"{_MDS}{self.title_const}RecordMember"
 
         # # MDS core aliases (masking templated types)
         # self.primitive = f"h_m{api}_t"  
@@ -239,16 +239,16 @@ class MDSArrayTypeInfo(MDSCompositeTypeInfo):
         self.const_record_field = self.const_array_record_field
 
         # # MDS core aliases (masking const templated types)
-        # self.const_primitive = f"h_const_m{api}_t"
-        # self.const_array = f"h_const_array_{api}_t"
-        # self.const_managed_value = f"mv_const_{api}"
-        # self.const_managed_array = f"h_const_marray_{api}_t"
-        # self.f_const_managed_type_handle = f"const_managed_{api}_type_handle"
-        # self.const_record_field = f"h_const_rfield_{api}_t"
+        # self.const_primitive = f"h_c_m{api}_t"
+        # self.const_array = f"h_c_array_{api}_t"
+        # self.const_managed_value = f"mv_c_{api}"
+        # self.const_managed_array = f"h_c_marray_{api}_t"
+        # self.f_c_managed_type_handle = f"const_managed_{api}_type_handle"
+        # self.const_record_field = f"h_c_rfield_{api}_t"
 
         # self.kind = "mds::api::kind::{}".format(api.upper())
         # self.f_create_array = f"create_{api}_marray"
-        # self.f_create_const_array = f"create_const_{api}_marray"
+        # self.f_create_c_array = f"create_c_{api}_marray"
         # self.f_bind = f"bind_{api}"
         # self.f_bind_array = f"bind_{api}_array"
         # self.f_lookup = f"lookup_{api}"

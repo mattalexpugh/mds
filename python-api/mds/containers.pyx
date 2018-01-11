@@ -23,8 +23,8 @@ Application during this compilation process under terms of your choice,
 provided you also meet the terms and conditions of the Application license.
 """
 
-from mds.core.api_tasks cimport *
-from mds.core.api_isolation_contexts cimport *
+from mds.core.tasks cimport *
+from mds.core.isolation_contexts cimport *
 
 from mds.threading import MDSThreadData
 
@@ -228,7 +228,7 @@ def report_to(reports: Iterable[PublishReport]) -> ReportOptions:
 
 cdef class PublicationResult(object):
 
-    cdef publication_attempt_handle _handle
+    cdef h_pub_attempt_t _handle
 
     def __hash__(self):
         return self._handle.hash1()
@@ -241,7 +241,7 @@ cdef class PublicationResult(object):
 
     def redo_tasks_by_start_time(self) -> List[Task]:
         cdef:
-            vector[task_handle] handles = self._handle.redo_tasks_by_start_time()
+            vector[h_task_t] handles = self._handle.redo_tasks_by_start_time()
             list tasks = list()
 
         for handle in handles:
@@ -324,7 +324,7 @@ cdef class PublicationResult(object):
         def __get__(self):
             return <bint> self._handle.succeeded()
 
-cdef PublicationResult_Init(publication_attempt_handle handle):
+cdef PublicationResult_Init(h_pub_attempt_t handle):
     initialize_base_task()
     result = PublicationResult()
     result._handle = handle
@@ -391,7 +391,7 @@ cdef void __kinds_check(str kind):
 
 cdef class IsolationContext(object):
 
-    cdef iso_context_handle _handle
+    cdef h_isoctxt_t _handle
 
     def __hash__(self):
         return self._handle.hash1()
@@ -404,7 +404,7 @@ cdef class IsolationContext(object):
 
     cdef __create_child(self, str kind, bool snapshot):
         cdef:
-            iso_context_handle handle
+            h_isoctxt_t handle
             str k_live = "live"
             str k_read_only = "read_only"
             str k_detached = "detached"
@@ -571,7 +571,7 @@ cdef class IsolationContext(object):
 
     @staticmethod
     def get_global() -> IsolationContext:
-        return IsolationContext_Init(iso_context_handle._global())
+        return IsolationContext_Init(h_isoctxt_t._global())
 
     @staticmethod
     def get_current() -> IsolationContext:
@@ -579,7 +579,7 @@ cdef class IsolationContext(object):
 
     @staticmethod
     def get_for_process() -> IsolationContext:
-        return IsolationContext_Init(iso_context_handle.for_process())
+        return IsolationContext_Init(h_isoctxt_t.for_process())
 
     property top_level_task:
         def __get__(self):
@@ -648,7 +648,7 @@ def in_read_only_snapshot(fn: Callable):
     return IsolationContext.get_current().call_in_read_only_snapshot(fn)
 
 
-cdef inline IsolationContext_Init(iso_context_handle handle):
+cdef inline IsolationContext_Init(h_isoctxt_t handle):
     initialize_base_task()
     result = IsolationContext()
     result._handle = handle
@@ -683,7 +683,7 @@ class ComputedVal(object):
     def computed(fn: Callable) -> 'ComputedVal':
         return ComputedVal(fn=fn)
 
-    class Publishable(TaskComputedBase):
+    class Publishable(ComputedVal.TaskComputedBase):
         """
         This is missing weak ptr stuff, but should resolve
         """
@@ -707,7 +707,7 @@ class ComputedVal(object):
             # return _val;
             return self._val
 
-    def create_concrete(self, fn: Callable) -> TaskComputedBase:
+    def create_concrete(self, fn: Callable) -> 'ComputedVal.TaskComputedBase':
         ctxt = IsolationContext.get_current()
 
         if ctxt.is_publishable:
@@ -724,8 +724,8 @@ cdef class Task(object):
         object _target
         bint _expired
         list _prepare_for_redo
-        task_handle _handle
-        iso_context_handle _ctxt
+        h_task_t _handle
+        h_isoctxt_t _ctxt
 
     def __cinit__(self, target=None, args=tuple()):
         Task.initialize_base_task()
@@ -896,7 +896,7 @@ class MDSTaskFnWrapper(object):
 def for_each_in_tasks(list iterable, object fn):
     map(iterable, Task.task_fn(fn))
 
-cdef inline Task_Init(task_handle handle):
+cdef inline Task_Init(h_task_t handle):
     # TODO Remove me, DEBUG
     print("Initializing task with hash {}".format(handle.hash1()))
     result = Task()
@@ -908,7 +908,7 @@ cdef object __establish_and_run(Task task, object fn, object args):
     cdef Establish c = Establish(task._handle.push())  # struct _establish => Establish
     return fn(*args)
 
-cdef inline add_task_handle(Task task, task_handle handle):
+cdef inline add_task_handle(Task task, h_task_t handle):
     task._handle = handle
 
 cdef inline update_context_handle_in_task(Task task, IsolationContext ctxt):

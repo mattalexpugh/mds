@@ -29,21 +29,24 @@ from typing import Dict, Text, Union
 from mds.containers import Task
 from mds.managed import Namespace
 
+KEY_NAMESPACE = "namespace"
+KEY_TASK = "task"
+
 ThreadLocalDataTypes = Union[Task, Namespace]
 CurrentDict = Dict[Text, ThreadLocalDataTypes]
 
 
 class MDSThreadData(object):
 
-    STORE = threading.local()
+    STORE = local()
 
     def __init__(self):
         local_data = MDSThreadData.STORE
 
         if not hasattr(local_data, "current") or not local_data.current:
             local_data.current = {
-                "task" = Task(),  # TODO: Initialize with top-level-task
-                "namespace" = Namespace.root()
+                KEY_TASK: Task(),  # TODO: Initialize with top-level-task
+                KEY_NAMESPACE: Namespace.root()
             }
 
     @property
@@ -52,20 +55,20 @@ class MDSThreadData(object):
 
     @classmethod
     def current_namespace(cls) -> Namespace:
-        return cls().current['namespace']
+        return cls().current[KEY_NAMESPACE]
 
     @classmethod
     def set_current_namespace(cls, ns: Namespace) -> None:
-        cls().current['namespace'] = ns
+        cls().current[KEY_NAMESPACE] = ns
 
     @classmethod
     def current_task(cls) -> Task:
-        return cls().current['task']
+        return cls().current[KEY_TASK]
 
     @classmethod
     def set_current_task(cls, t: Task) -> None:
         # TODO: Pull in changes from fixedcontainers and set this with _establish
-        cls().current['task'] = t
+        cls().current[KEY_TASK] = t
 
     def set_from_child(self, other: CurrentDict):
         # We want to make sure a child thread can only set the context once.

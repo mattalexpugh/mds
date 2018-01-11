@@ -79,4 +79,3 @@ MPGC Statistics:
     property num_current_objects:
         def __get__(self):
             return control_block().mem_stats.n_current_objects()
-            

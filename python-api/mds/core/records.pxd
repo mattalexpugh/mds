@@ -26,8 +26,8 @@ provided you also meet the terms and conditions of the Application license.
 from libc.stdint cimport *
 from libcpp cimport bool
 
-from mds.core.api_arrays cimport *
-from mds.core.api_strings cimport h_istring_t, h_mstring_t, managed_string_handle
+from mds.core.arrays cimport *
+from mds.core.strings cimport h_istring_t, h_mstring_t, h_mstring_t
 
 cdef extern from "mds_core_api.h" namespace "mds::api" nogil:
     cdef cppclass managed_record_handle:
@@ -551,14 +551,14 @@ cdef extern from "mds_core_api.h" namespace "mds::api" nogil:
     cdef cppclass h_rfield_string_t "mds::api::record_field_handle<mds::api::kind::STRING>":
         h_rfield_string_t()
         h_rfield_string_t(h_rfield_string_t&)
-        managed_string_handle free_read(const managed_record_handle&)
-        managed_string_handle frozen_read(const managed_record_handle&)
+        h_mstring_t free_read(const managed_record_handle&)
+        h_mstring_t frozen_read(const managed_record_handle&)
 
         bool has_value(const managed_record_handle&)
-        bool write_initial(const managed_record_handle&,const managed_string_handle&)
+        bool write_initial(const managed_record_handle&, const h_mstring_t&)
         bool is_null()
 
-        managed_string_handle write(const managed_record_handle&, const managed_string_handle&)
+        h_mstring_t write(const managed_record_handle&, const h_mstring_t&)
         h_istring_t name()
         
         const_record_type_handle rec_type()
@@ -567,14 +567,14 @@ cdef extern from "mds_core_api.h" namespace "mds::api" nogil:
     cdef cppclass h_const_rfield_string_t "mds::api::const_record_field_handle<mds::api::kind::STRING>":
         h_const_rfield_string_t()
         h_const_rfield_string_t(h_const_rfield_string_t&)
-        managed_string_handle free_read(const managed_record_handle&)
-        managed_string_handle frozen_read(const managed_record_handle&)
+        h_mstring_t free_read(const managed_record_handle&)
+        h_mstring_t frozen_read(const managed_record_handle&)
 
         bool has_value(const managed_record_handle&)
-        bool write_initial(const managed_record_handle&,const managed_string_handle&)
+        bool write_initial(const managed_record_handle&, const h_mstring_t&)
         bool is_null()
 
-        managed_string_handle write(const managed_record_handle&, const managed_string_handle&)
+        h_mstring_t write(const managed_record_handle&, const h_mstring_t&)
         h_istring_t name()
         
         const_record_type_handle rec_type()

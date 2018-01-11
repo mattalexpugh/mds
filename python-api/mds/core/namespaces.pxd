@@ -25,10 +25,10 @@ provided you also meet the terms and conditions of the Application license.
 
 from libcpp cimport bool
 
-from mds.core.api_arrays cimport *
-from mds.core.api_primitives cimport *
-from mds.core.api_records cimport h_mrecord_t, h_rtype_t
-from mds.core.api_strings cimport h_istring_t, h_mstring_t, interned_string_handle
+from mds.core.arrays cimport *
+from mds.core.primitives cimport *
+from mds.core.records cimport h_mrecord_t, h_rtype_t
+from mds.core.strings cimport h_istring_t, h_mstring_t, h_istring_t
 
 cdef extern from "mds_core_api.h" namespace "mds::api" nogil:
     cdef cppclass namespace_handle:

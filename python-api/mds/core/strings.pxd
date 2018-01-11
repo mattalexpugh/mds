@@ -27,52 +27,52 @@ from libc.stdint cimport uint_least16_t, uint64_t
 from libcpp cimport bool
 from libcpp.string cimport string
 
-ctypedef uint_least16_t char_type
+ctypedef uint_least16_t char_t
 
 cdef extern from "mds_core_api.h" namespace "mds::api" nogil:
-    cdef cppclass interned_string_handle:
-        interned_string_handle()
-        interned_string_handle(string s)
+    cdef cppclass h_istring_t "interned_string_handle":
+        h_istring_t()
+        h_istring_t(string s)
 
-    interned_string_handle intern(string s)
+    h_istring_t intern(string s)
     
-    cdef cppclass managed_string_handle:
-        managed_string_handle()
-        managed_string_handle(interned_string_handle ish)
+    cdef cppclass h_mstring_t "managed_string_handle":
+        h_mstring_t()
+        h_mstring_t(h_istring_t ish)
 
-        char_type at(size_t i)
+        char_t at(size_t i)
         string utf8()
 
         size_t size()
         size_t length()
         uint64_t hash1()
 
-        bool operator==(managed_string_handle other)
-        bool operator!=(managed_string_handle other)
-        bool operator<(managed_string_handle other)
-        bool operator<=(managed_string_handle other)
-        bool operator>(managed_string_handle other)
-        bool operator>=(managed_string_handle other)
+        bool operator== (h_mstring_t other)
+        bool operator!= (h_mstring_t other)
+        bool operator<  (h_mstring_t other)
+        bool operator<= (h_mstring_t other)
+        bool operator>  (h_mstring_t other)
+        bool operator>= (h_mstring_t other)
 
-    cdef cppclass const_managed_string_handle:
-        const_managed_string_handle()
-        const_managed_string_handle(interned_string_handle ish)
+    cdef cppclass h_c_mstring_t "const_managed_string_handle":
+        h_c_mstring_t()
+        h_c_mstring_t(h_istring_t ish)
 
-        char_type at(size_t i)
+        char_t at(size_t i)
         string utf8()
 
         size_t size()
         size_t length()
         uint64_t hash1()
 
-        bool operator==(const_managed_string_handle other)
-        bool operator!=(const_managed_string_handle other)
-        bool operator<(const_managed_string_handle other)
-        bool operator<=(const_managed_string_handle other)
-        bool operator>(const_managed_string_handle other)
-        bool operator>=(const_managed_string_handle other)
+        bool operator== (h_c_mstring_t other)
+        bool operator!= (h_c_mstring_t other)
+        bool operator<  (h_c_mstring_t other)
+        bool operator<= (h_c_mstring_t other)
+        bool operator>  (h_c_mstring_t other)
+        bool operator>= (h_c_mstring_t other)
 
-cdef inline interned_string_handle convert_py_to_ish(value):
+cdef inline h_istring_t convert_py_to_ish(value):
     cdef string msg
     
     if isinstance(value, bytes):
@@ -85,7 +85,3 @@ cdef inline interned_string_handle convert_py_to_ish(value):
         )
 
     return intern(msg)
-
-ctypedef managed_string_handle h_mstring_t
-ctypedef const_managed_string_handle h_const_mstring_t
-ctypedef interned_string_handle h_istring_t

@@ -34,7 +34,7 @@ from typing import Dict, Iterable, List, Optional, Text, Union
 
 import mds
 from mds import MDSTypeInfo, MDSArrayTypeInfo
-from mds.threading import MDSThreadLocalData
+from mds.threading import MDSThreadData
 
 from mds.core.api_arrays cimport *
 from mds.core.api_namespaces cimport *
@@ -5420,4 +5420,6 @@ cdef class Double(MDSFloatPrimitiveBase):
     property dtype:
         def __get__(self):
             return mds.typing.primitives.double
-                                                        # END INJECTI
+
+
+# END INJECTION

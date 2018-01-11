@@ -26,8 +26,8 @@ provided you also meet the terms and conditions of the Application license.
 from libc.stdint cimport *
 from libcpp cimport bool
 
-from mds.core.api_records cimport *
-from mds.core.api_strings cimport h_istring_t, interned_string_handle
+from mds.core.records cimport *
+from mds.core.strings cimport h_istring_t, h_istring_t
 
 cdef extern from "mds_core_api.h" namespace "mds::api" nogil:
     # TODO Not sure these guys are correct, or are the same as below...
@@ -56,12 +56,12 @@ cdef extern from "mds_core_api.h" namespace "mds::api" nogil:
 
     cdef cppclass h_mbool_t "mds::api::managed_type_handle<mds::api::kind::BOOL>":
         h_mbool_t()
-        h_rfield_bool_t field_in(record_type_handle&, interned_string_handle&, bool) except+
+        h_rfield_bool_t field_in(record_type_handle&, h_istring_t&, bool) except+
         uint64_t hash1()
 
     cdef cppclass h_const_mbool_t "mds::api::const_managed_type_handle<mds::api::kind::BOOL>":
         h_const_mbool_t()
-        h_rfield_bool_t field_in(record_type_handle&, interned_string_handle&, bool) except+
+        h_rfield_bool_t field_in(record_type_handle&, h_istring_t&, bool) except+
         uint64_t hash1()
 
     cdef h_mbool_t managed_bool_type_handle "mds::api::managed_type_handle<mds::api::kind::BOOL>"()
@@ -82,12 +82,12 @@ cdef extern from "mds_core_api.h" namespace "mds::api" nogil:
 
     cdef cppclass h_mbyte_t "mds::api::managed_type_handle<mds::api::kind::BYTE>":
         h_mbyte_t()
-        h_rfield_byte_t field_in(record_type_handle&, interned_string_handle&, bool) except+
+        h_rfield_byte_t field_in(record_type_handle&, h_istring_t&, bool) except+
         uint64_t hash1()
 
     cdef cppclass h_const_mbyte_t "mds::api::const_managed_type_handle<mds::api::kind::BYTE>":
         h_const_mbyte_t()
-        h_rfield_byte_t field_in(record_type_handle&, interned_string_handle&, bool) except+
+        h_rfield_byte_t field_in(record_type_handle&, h_istring_t&, bool) except+
         uint64_t hash1()
 
     cdef h_mbyte_t managed_byte_type_handle "mds::api::managed_type_handle<mds::api::kind::BYTE>"()
@@ -108,12 +108,12 @@ cdef extern from "mds_core_api.h" namespace "mds::api" nogil:
 
     cdef cppclass h_mubyte_t "mds::api::managed_type_handle<mds::api::kind::UBYTE>":
         h_mubyte_t()
-        h_rfield_ubyte_t field_in(record_type_handle&, interned_string_handle&, bool) except+
+        h_rfield_ubyte_t field_in(record_type_handle&, h_istring_t&, bool) except+
         uint64_t hash1()
 
     cdef cppclass h_const_mubyte_t "mds::api::const_managed_type_handle<mds::api::kind::UBYTE>":
         h_const_mubyte_t()
-        h_rfield_ubyte_t field_in(record_type_handle&, interned_string_handle&, bool) except+
+        h_rfield_ubyte_t field_in(record_type_handle&, h_istring_t&, bool) except+
         uint64_t hash1()
 
     cdef h_mubyte_t managed_ubyte_type_handle "mds::api::managed_type_handle<mds::api::kind::UBYTE>"()
@@ -134,12 +134,12 @@ cdef extern from "mds_core_api.h" namespace "mds::api" nogil:
 
     cdef cppclass h_mshort_t "mds::api::managed_type_handle<mds::api::kind::SHORT>":
         h_mshort_t()
-        h_rfield_short_t field_in(record_type_handle&, interned_string_handle&, bool) except+
+        h_rfield_short_t field_in(record_type_handle&, h_istring_t&, bool) except+
         uint64_t hash1()
 
     cdef cppclass h_const_mshort_t "mds::api::const_managed_type_handle<mds::api::kind::SHORT>":
         h_const_mshort_t()
-        h_rfield_short_t field_in(record_type_handle&, interned_string_handle&, bool) except+
+        h_rfield_short_t field_in(record_type_handle&, h_istring_t&, bool) except+
         uint64_t hash1()
 
     cdef h_mshort_t managed_short_type_handle "mds::api::managed_type_handle<mds::api::kind::SHORT>"()
@@ -160,12 +160,12 @@ cdef extern from "mds_core_api.h" namespace "mds::api" nogil:
 
     cdef cppclass h_mushort_t "mds::api::managed_type_handle<mds::api::kind::USHORT>":
         h_mushort_t()
-        h_rfield_ushort_t field_in(record_type_handle&, interned_string_handle&, bool) except+
+        h_rfield_ushort_t field_in(record_type_handle&, h_istring_t&, bool) except+
         uint64_t hash1()
 
     cdef cppclass h_const_mushort_t "mds::api::const_managed_type_handle<mds::api::kind::USHORT>":
         h_const_mushort_t()
-        h_rfield_ushort_t field_in(record_type_handle&, interned_string_handle&, bool) except+
+        h_rfield_ushort_t field_in(record_type_handle&, h_istring_t&, bool) except+
         uint64_t hash1()
 
     cdef h_mushort_t managed_ushort_type_handle "mds::api::managed_type_handle<mds::api::kind::USHORT>"()
@@ -186,12 +186,12 @@ cdef extern from "mds_core_api.h" namespace "mds::api" nogil:
 
     cdef cppclass h_mint_t "mds::api::managed_type_handle<mds::api::kind::INT>":
         h_mint_t()
-        h_rfield_int_t field_in(record_type_handle&, interned_string_handle&, bool) except+
+        h_rfield_int_t field_in(record_type_handle&, h_istring_t&, bool) except+
         uint64_t hash1()
 
     cdef cppclass h_const_mint_t "mds::api::const_managed_type_handle<mds::api::kind::INT>":
         h_const_mint_t()
-        h_rfield_int_t field_in(record_type_handle&, interned_string_handle&, bool) except+
+        h_rfield_int_t field_in(record_type_handle&, h_istring_t&, bool) except+
         uint64_t hash1()
 
     cdef h_mint_t managed_int_type_handle "mds::api::managed_type_handle<mds::api::kind::INT>"()
@@ -212,12 +212,12 @@ cdef extern from "mds_core_api.h" namespace "mds::api" nogil:
 
     cdef cppclass h_muint_t "mds::api::managed_type_handle<mds::api::kind::UINT>":
         h_muint_t()
-        h_rfield_uint_t field_in(record_type_handle&, interned_string_handle&, bool) except+
+        h_rfield_uint_t field_in(record_type_handle&, h_istring_t&, bool) except+
         uint64_t hash1()
 
     cdef cppclass h_const_muint_t "mds::api::const_managed_type_handle<mds::api::kind::UINT>":
         h_const_muint_t()
-        h_rfield_uint_t field_in(record_type_handle&, interned_string_handle&, bool) except+
+        h_rfield_uint_t field_in(record_type_handle&, h_istring_t&, bool) except+
         uint64_t hash1()
 
     cdef h_muint_t managed_uint_type_handle "mds::api::managed_type_handle<mds::api::kind::UINT>"()
@@ -238,12 +238,12 @@ cdef extern from "mds_core_api.h" namespace "mds::api" nogil:
 
     cdef cppclass h_mlong_t "mds::api::managed_type_handle<mds::api::kind::LONG>":
         h_mlong_t()
-        h_rfield_long_t field_in(record_type_handle&, interned_string_handle&, bool) except+
+        h_rfield_long_t field_in(record_type_handle&, h_istring_t&, bool) except+
         uint64_t hash1()
 
     cdef cppclass h_const_mlong_t "mds::api::const_managed_type_handle<mds::api::kind::LONG>":
         h_const_mlong_t()
-        h_rfield_long_t field_in(record_type_handle&, interned_string_handle&, bool) except+
+        h_rfield_long_t field_in(record_type_handle&, h_istring_t&, bool) except+
         uint64_t hash1()
 
     cdef h_mlong_t managed_long_type_handle "mds::api::managed_type_handle<mds::api::kind::LONG>"()
@@ -264,12 +264,12 @@ cdef extern from "mds_core_api.h" namespace "mds::api" nogil:
 
     cdef cppclass h_mulong_t "mds::api::managed_type_handle<mds::api::kind::ULONG>":
         h_mulong_t()
-        h_rfield_ulong_t field_in(record_type_handle&, interned_string_handle&, bool) except+
+        h_rfield_ulong_t field_in(record_type_handle&, h_istring_t&, bool) except+
         uint64_t hash1()
 
     cdef cppclass h_const_mulong_t "mds::api::const_managed_type_handle<mds::api::kind::ULONG>":
         h_const_mulong_t()
-        h_rfield_ulong_t field_in(record_type_handle&, interned_string_handle&, bool) except+
+        h_rfield_ulong_t field_in(record_type_handle&, h_istring_t&, bool) except+
         uint64_t hash1()
 
     cdef h_mulong_t managed_ulong_type_handle "mds::api::managed_type_handle<mds::api::kind::ULONG>"()
@@ -290,12 +290,12 @@ cdef extern from "mds_core_api.h" namespace "mds::api" nogil:
 
     cdef cppclass h_mfloat_t "mds::api::managed_type_handle<mds::api::kind::FLOAT>":
         h_mfloat_t()
-        h_rfield_float_t field_in(record_type_handle&, interned_string_handle&, bool) except+
+        h_rfield_float_t field_in(record_type_handle&, h_istring_t&, bool) except+
         uint64_t hash1()
 
     cdef cppclass h_const_mfloat_t "mds::api::const_managed_type_handle<mds::api::kind::FLOAT>":
         h_const_mfloat_t()
-        h_rfield_float_t field_in(record_type_handle&, interned_string_handle&, bool) except+
+        h_rfield_float_t field_in(record_type_handle&, h_istring_t&, bool) except+
         uint64_t hash1()
 
     cdef h_mfloat_t managed_float_type_handle "mds::api::managed_type_handle<mds::api::kind::FLOAT>"()
@@ -316,12 +316,12 @@ cdef extern from "mds_core_api.h" namespace "mds::api" nogil:
 
     cdef cppclass h_mdouble_t "mds::api::managed_type_handle<mds::api::kind::DOUBLE>":
         h_mdouble_t()
-        h_rfield_double_t field_in(record_type_handle&, interned_string_handle&, bool) except+
+        h_rfield_double_t field_in(record_type_handle&, h_istring_t&, bool) except+
         uint64_t hash1()
 
     cdef cppclass h_const_mdouble_t "mds::api::const_managed_type_handle<mds::api::kind::DOUBLE>":
         h_const_mdouble_t()
-        h_rfield_double_t field_in(record_type_handle&, interned_string_handle&, bool) except+
+        h_rfield_double_t field_in(record_type_handle&, h_istring_t&, bool) except+
         uint64_t hash1()
 
     cdef h_mdouble_t managed_double_type_handle "mds::api::managed_type_handle<mds::api::kind::DOUBLE>"()
@@ -329,4 +329,3 @@ cdef extern from "mds_core_api.h" namespace "mds::api" nogil:
     double double_to_core_val "mds::api::to_core_val<mds::api::kind::DOUBLE>" (const mv_double&)
 
 # END INJECTION
-
