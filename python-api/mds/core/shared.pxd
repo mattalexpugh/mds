@@ -30,7 +30,6 @@ cdef extern from "mds_core_api.h" namespace "mds::api" nogil:
         view_independent_handle()
 
         bool is_null()
-        uniform_key uuid()  # TODO define uniform_key
 
         uint64_t hash1()
         uint64_t hash2()

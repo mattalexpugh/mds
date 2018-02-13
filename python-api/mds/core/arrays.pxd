@@ -46,7 +46,7 @@ cdef extern from "helpers.h" namespace "mds::python::types":
         # h_const_mbool_t element_type()
         bool is_same_as(const h_array_bool_t&)
         uint64_t hash1()
-        h_rfield_array_bool_t field_in(record_type_handle&, h_istring_t&, bool) except+
+        h_rfield_array_bool_t field_in(h_record_type_t&, h_istring_t&, bool) except+
 
     cdef cppclass h_const_array_bool_t "mds::api::const_array_type_handle<mds::api::kind::BOOL>":
         h_const_array_bool_t()
@@ -55,7 +55,7 @@ cdef extern from "helpers.h" namespace "mds::python::types":
         # h_const_mbool_t element_type()
         bool is_same_as(const h_const_array_bool_t&)
         uint64_t hash1()
-        h_rfield_array_bool_t field_in(record_type_handle&, h_istring_t&, bool) except+
+        h_rfield_array_bool_t field_in(h_record_type_t&, h_istring_t&, bool) except+
 
     cdef cppclass h_marray_bool_t:
         h_marray_bool_t()
@@ -87,7 +87,7 @@ cdef extern from "helpers.h" namespace "mds::python::types":
         # h_const_mbyte_t element_type()
         bool is_same_as(const h_array_byte_t&)
         uint64_t hash1()
-        h_rfield_array_byte_t field_in(record_type_handle&, h_istring_t&, bool) except+
+        h_rfield_array_byte_t field_in(h_record_type_t&, h_istring_t&, bool) except+
 
     cdef cppclass h_const_array_byte_t "mds::api::const_array_type_handle<mds::api::kind::BYTE>":
         h_const_array_byte_t()
@@ -96,7 +96,7 @@ cdef extern from "helpers.h" namespace "mds::python::types":
         # h_const_mbyte_t element_type()
         bool is_same_as(const h_const_array_byte_t&)
         uint64_t hash1()
-        h_rfield_array_byte_t field_in(record_type_handle&, h_istring_t&, bool) except+
+        h_rfield_array_byte_t field_in(h_record_type_t&, h_istring_t&, bool) except+
 
     cdef cppclass h_marray_byte_t:
         h_marray_byte_t()
@@ -133,7 +133,7 @@ cdef extern from "helpers.h" namespace "mds::python::types":
         # h_const_mubyte_t element_type()
         bool is_same_as(const h_array_ubyte_t&)
         uint64_t hash1()
-        h_rfield_array_ubyte_t field_in(record_type_handle&, h_istring_t&, bool) except+
+        h_rfield_array_ubyte_t field_in(h_record_type_t&, h_istring_t&, bool) except+
 
     cdef cppclass h_const_array_ubyte_t "mds::api::const_array_type_handle<mds::api::kind::UBYTE>":
         h_const_array_ubyte_t()
@@ -142,7 +142,7 @@ cdef extern from "helpers.h" namespace "mds::python::types":
         # h_const_mubyte_t element_type()
         bool is_same_as(const h_const_array_ubyte_t&)
         uint64_t hash1()
-        h_rfield_array_ubyte_t field_in(record_type_handle&, h_istring_t&, bool) except+
+        h_rfield_array_ubyte_t field_in(h_record_type_t&, h_istring_t&, bool) except+
 
     cdef cppclass h_marray_ubyte_t:
         h_marray_ubyte_t()
@@ -179,7 +179,7 @@ cdef extern from "helpers.h" namespace "mds::python::types":
         # h_const_mshort_t element_type()
         bool is_same_as(const h_array_short_t&)
         uint64_t hash1()
-        h_rfield_array_short_t field_in(record_type_handle&, h_istring_t&, bool) except+
+        h_rfield_array_short_t field_in(h_record_type_t&, h_istring_t&, bool) except+
 
     cdef cppclass h_const_array_short_t "mds::api::const_array_type_handle<mds::api::kind::SHORT>":
         h_const_array_short_t()
@@ -188,7 +188,7 @@ cdef extern from "helpers.h" namespace "mds::python::types":
         # h_const_mshort_t element_type()
         bool is_same_as(const h_const_array_short_t&)
         uint64_t hash1()
-        h_rfield_array_short_t field_in(record_type_handle&, h_istring_t&, bool) except+
+        h_rfield_array_short_t field_in(h_record_type_t&, h_istring_t&, bool) except+
 
     cdef cppclass h_marray_short_t:
         h_marray_short_t()
@@ -225,7 +225,7 @@ cdef extern from "helpers.h" namespace "mds::python::types":
         # h_const_mushort_t element_type()
         bool is_same_as(const h_array_ushort_t&)
         uint64_t hash1()
-        h_rfield_array_ushort_t field_in(record_type_handle&, h_istring_t&, bool) except+
+        h_rfield_array_ushort_t field_in(h_record_type_t&, h_istring_t&, bool) except+
 
     cdef cppclass h_const_array_ushort_t "mds::api::const_array_type_handle<mds::api::kind::USHORT>":
         h_const_array_ushort_t()
@@ -234,7 +234,7 @@ cdef extern from "helpers.h" namespace "mds::python::types":
         # h_const_mushort_t element_type()
         bool is_same_as(const h_const_array_ushort_t&)
         uint64_t hash1()
-        h_rfield_array_ushort_t field_in(record_type_handle&, h_istring_t&, bool) except+
+        h_rfield_array_ushort_t field_in(h_record_type_t&, h_istring_t&, bool) except+
 
     cdef cppclass h_marray_ushort_t:
         h_marray_ushort_t()
@@ -271,7 +271,7 @@ cdef extern from "helpers.h" namespace "mds::python::types":
         # h_const_mint_t element_type()
         bool is_same_as(const h_array_int_t&)
         uint64_t hash1()
-        h_rfield_array_int_t field_in(record_type_handle&, h_istring_t&, bool) except+
+        h_rfield_array_int_t field_in(h_record_type_t&, h_istring_t&, bool) except+
 
     cdef cppclass h_const_array_int_t "mds::api::const_array_type_handle<mds::api::kind::INT>":
         h_const_array_int_t()
@@ -280,7 +280,7 @@ cdef extern from "helpers.h" namespace "mds::python::types":
         # h_const_mint_t element_type()
         bool is_same_as(const h_const_array_int_t&)
         uint64_t hash1()
-        h_rfield_array_int_t field_in(record_type_handle&, h_istring_t&, bool) except+
+        h_rfield_array_int_t field_in(h_record_type_t&, h_istring_t&, bool) except+
 
     cdef cppclass h_marray_int_t:
         h_marray_int_t()
@@ -317,7 +317,7 @@ cdef extern from "helpers.h" namespace "mds::python::types":
         # h_const_muint_t element_type()
         bool is_same_as(const h_array_uint_t&)
         uint64_t hash1()
-        h_rfield_array_uint_t field_in(record_type_handle&, h_istring_t&, bool) except+
+        h_rfield_array_uint_t field_in(h_record_type_t&, h_istring_t&, bool) except+
 
     cdef cppclass h_const_array_uint_t "mds::api::const_array_type_handle<mds::api::kind::UINT>":
         h_const_array_uint_t()
@@ -326,7 +326,7 @@ cdef extern from "helpers.h" namespace "mds::python::types":
         # h_const_muint_t element_type()
         bool is_same_as(const h_const_array_uint_t&)
         uint64_t hash1()
-        h_rfield_array_uint_t field_in(record_type_handle&, h_istring_t&, bool) except+
+        h_rfield_array_uint_t field_in(h_record_type_t&, h_istring_t&, bool) except+
 
     cdef cppclass h_marray_uint_t:
         h_marray_uint_t()
@@ -363,7 +363,7 @@ cdef extern from "helpers.h" namespace "mds::python::types":
         # h_const_mlong_t element_type()
         bool is_same_as(const h_array_long_t&)
         uint64_t hash1()
-        h_rfield_array_long_t field_in(record_type_handle&, h_istring_t&, bool) except+
+        h_rfield_array_long_t field_in(h_record_type_t&, h_istring_t&, bool) except+
 
     cdef cppclass h_const_array_long_t "mds::api::const_array_type_handle<mds::api::kind::LONG>":
         h_const_array_long_t()
@@ -372,7 +372,7 @@ cdef extern from "helpers.h" namespace "mds::python::types":
         # h_const_mlong_t element_type()
         bool is_same_as(const h_const_array_long_t&)
         uint64_t hash1()
-        h_rfield_array_long_t field_in(record_type_handle&, h_istring_t&, bool) except+
+        h_rfield_array_long_t field_in(h_record_type_t&, h_istring_t&, bool) except+
 
     cdef cppclass h_marray_long_t:
         h_marray_long_t()
@@ -409,7 +409,7 @@ cdef extern from "helpers.h" namespace "mds::python::types":
         # h_const_mulong_t element_type()
         bool is_same_as(const h_array_ulong_t&)
         uint64_t hash1()
-        h_rfield_array_ulong_t field_in(record_type_handle&, h_istring_t&, bool) except+
+        h_rfield_array_ulong_t field_in(h_record_type_t&, h_istring_t&, bool) except+
 
     cdef cppclass h_const_array_ulong_t "mds::api::const_array_type_handle<mds::api::kind::ULONG>":
         h_const_array_ulong_t()
@@ -418,7 +418,7 @@ cdef extern from "helpers.h" namespace "mds::python::types":
         # h_const_mulong_t element_type()
         bool is_same_as(const h_const_array_ulong_t&)
         uint64_t hash1()
-        h_rfield_array_ulong_t field_in(record_type_handle&, h_istring_t&, bool) except+
+        h_rfield_array_ulong_t field_in(h_record_type_t&, h_istring_t&, bool) except+
 
     cdef cppclass h_marray_ulong_t:
         h_marray_ulong_t()
@@ -455,7 +455,7 @@ cdef extern from "helpers.h" namespace "mds::python::types":
         # h_const_mfloat_t element_type()
         bool is_same_as(const h_array_float_t&)
         uint64_t hash1()
-        h_rfield_array_float_t field_in(record_type_handle&, h_istring_t&, bool) except+
+        h_rfield_array_float_t field_in(h_record_type_t&, h_istring_t&, bool) except+
 
     cdef cppclass h_const_array_float_t "mds::api::const_array_type_handle<mds::api::kind::FLOAT>":
         h_const_array_float_t()
@@ -464,7 +464,7 @@ cdef extern from "helpers.h" namespace "mds::python::types":
         # h_const_mfloat_t element_type()
         bool is_same_as(const h_const_array_float_t&)
         uint64_t hash1()
-        h_rfield_array_float_t field_in(record_type_handle&, h_istring_t&, bool) except+
+        h_rfield_array_float_t field_in(h_record_type_t&, h_istring_t&, bool) except+
 
     cdef cppclass h_marray_float_t:
         h_marray_float_t()
@@ -501,7 +501,7 @@ cdef extern from "helpers.h" namespace "mds::python::types":
         # h_const_mdouble_t element_type()
         bool is_same_as(const h_array_double_t&)
         uint64_t hash1()
-        h_rfield_array_double_t field_in(record_type_handle&, h_istring_t&, bool) except+
+        h_rfield_array_double_t field_in(h_record_type_t&, h_istring_t&, bool) except+
 
     cdef cppclass h_const_array_double_t "mds::api::const_array_type_handle<mds::api::kind::DOUBLE>":
         h_const_array_double_t()
@@ -510,7 +510,7 @@ cdef extern from "helpers.h" namespace "mds::python::types":
         # h_const_mdouble_t element_type()
         bool is_same_as(const h_const_array_double_t&)
         uint64_t hash1()
-        h_rfield_array_double_t field_in(record_type_handle&, h_istring_t&, bool) except+
+        h_rfield_array_double_t field_in(h_record_type_t&, h_istring_t&, bool) except+
 
     cdef cppclass h_marray_double_t:
         h_marray_double_t()
@@ -547,7 +547,7 @@ cdef extern from "helpers.h" namespace "mds::python::types":
         # h_const_mstring_t element_type()
         bool is_same_as(const h_array_string_t&)
         uint64_t hash1()
-        h_rfield_array_string_t field_in(record_type_handle&, h_istring_t&, bool) except+
+        h_rfield_array_string_t field_in(h_record_type_t&, h_istring_t&, bool) except+
 
     cdef cppclass h_const_array_string_t "mds::api::const_array_type_handle<mds::api::kind::STRING>":
         h_const_array_string_t()
@@ -556,7 +556,7 @@ cdef extern from "helpers.h" namespace "mds::python::types":
         # h_const_mstring_t element_type()
         bool is_same_as(const h_const_array_string_t&)
         uint64_t hash1()
-        h_rfield_array_string_t field_in(record_type_handle&, h_istring_t&, bool) except+
+        h_rfield_array_string_t field_in(h_record_type_t&, h_istring_t&, bool) except+
 
     cdef cppclass h_marray_string_t:
         h_marray_string_t()
@@ -588,7 +588,7 @@ cdef extern from "helpers.h" namespace "mds::python::types":
         # h_const_mrecord_t element_type()
         bool is_same_as(const h_array_record_t&)
         uint64_t hash1()
-        h_rfield_array_record_t field_in(record_type_handle&, h_istring_t&, bool) except+
+        h_rfield_array_record_t field_in(h_record_type_t&, h_istring_t&, bool) except+
 
     cdef cppclass h_const_array_record_t "mds::api::const_array_type_handle<mds::api::kind::RECORD>":
         h_const_array_record_t()
@@ -597,7 +597,7 @@ cdef extern from "helpers.h" namespace "mds::python::types":
         # h_const_mrecord_t element_type()
         bool is_same_as(const h_const_array_record_t&)
         uint64_t hash1()
-        h_rfield_array_record_t field_in(record_type_handle&, h_istring_t&, bool) except+
+        h_rfield_array_record_t field_in(h_record_type_t&, h_istring_t&, bool) except+
 
     cdef cppclass h_marray_record_t:
         h_marray_record_t()

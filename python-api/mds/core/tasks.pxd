@@ -28,25 +28,6 @@ from libc.stdint cimport uint64_t
 
 from mds.core.isolation_contexts cimport h_isoctxt_t
 
-# TODO: Deprecate / Remove
-cdef extern from "helpers.h" namespace "mds::python::tasks":
-    cdef cppclass TaskWrapper:
-        TaskWrapper() nogil except +
-
-        void run(void(*)(_py_callable_wrapper), _py_callable_wrapper) except+ 
-
-        @staticmethod
-        h_task_t get_current()
-        void set_current(h_task_t)
-
-    void initialize_base_task() nogil
-
-# TODO: Deprecate / Remove
-cdef extern from "helpers.h" namespace "mds::python::tasks::TaskWrapper" nogil:
-    cdef cppclass Establish:
-        Establish()
-        Establish(const h_task_t&) except +
-
 cdef extern from "mds_core_api.h" namespace "mds::api" nogil:
     cdef cppclass h_task_t:
         task_handle()
@@ -72,4 +53,3 @@ cdef extern from "mds_core_api.h" namespace "mds::api" nogil:
 
         uint64_t hash1()
         uint64_t hash2()
-

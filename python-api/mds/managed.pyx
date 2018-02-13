@@ -36,12 +36,12 @@ import mds
 from mds import MDSTypeInfo, MDSArrayTypeInfo
 from mds.threading import MDSThreadData
 
-from mds.core.api_arrays cimport *
-from mds.core.api_namespaces cimport *
-from mds.core.api_primitives cimport *
-from mds.core.api_records cimport *
-from mds.core.api_strings cimport *
-from mds.core.api_tasks cimport initialize_base_task
+from mds.core.arrays cimport *
+from mds.core.namespaces cimport *
+from mds.core.primitives cimport *
+from mds.core.records cimport *
+from mds.core.strings cimport *
+from mds.core.tasks cimport initialize_base_task
 
 initialize_base_task()
 
@@ -51,9 +51,6 @@ initialize_base_task()
 
 cdef class MDSObject(object):
 
-    def _throw_const_error(self):
-        raise ConstError("Can't assign value to const field.")
-
     @classmethod
     def from_namespace(cls, namespace: Namespace, path: PathTypes):
         return NotImplemented
@@ -61,14 +58,6 @@ cdef class MDSObject(object):
     def bind_to_namespace(self, namespace: Namespace, path: PathTypes) -> None:
         pass
 
-    property is_const:
-        def __get__(self):
-            raw_name = self.__class__.__name__
-
-            if raw_name.startswith("MDS"):
-                raw_name = raw_name[3:]
-
-            return raw_name.startswith("Const")
 
 cdef class MDSProxyObject(object):
 
@@ -91,9 +80,6 @@ cdef class MDSProxyObject(object):
 # =========================================================================
 
 cdef class UnderflowError(Exception):
-    pass
-
-cdef class ConstError(Exception):
     pass
 
 # =========================================================================
@@ -279,7 +265,8 @@ cdef class MDSIndexedObject(MDSObject):
         return c
 
 
-cdef class MDSConstArrayBase(MDSIndexedObject):
+cdef class MDSArrayBase(MDSIndexedObject):
+
     cdef size_t _last_index
 
     def __getitem__(self, index):
@@ -290,14 +277,14 @@ cdef class MDSConstArrayBase(MDSIndexedObject):
         return self._to_python(index)
 
     def _to_python(self, index):
-        raise NotImplementedError('Specialization of MDSList required') 
+        raise NotImplementedError('Specialization of MDSList required')
 
     def _to_mds(self, index, value):
-        raise NotImplementedError('Specialization of MDSList required') 
+        raise NotImplementedError('Specialization of MDSList required')
 
     def copy(self):
         raise NotImplementedError('Specialization of MDSArrayBase required')
- 
+
     @classmethod
     def of(cls, values: Iterable):
         retval = cls(length=len(values))
@@ -310,9 +297,6 @@ cdef class MDSConstArrayBase(MDSIndexedObject):
     property dtype:
         def __get__(self):
             raise NotImplementedError('Specialization of MDSArrayBase required')
-
-
-cdef class MDSArrayBase(MDSConstArrayBase):
 
     def __setitem__(self, index, value):
         index = self._index_bounds_check(index)
@@ -367,8 +351,8 @@ cdef class RecordArray(MDSArrayBase):
     def from_namespace(cls, Namespace namespace, path) -> Optional[RecordArray]:
         # cdef:
         #     String p = __cast_to_mds_string(path)
-        #     interned_string_handle ish = p._ish
-        #     namespace_handle nhandle = namespace._handle
+        #     h_istring_t ish = p._ish
+        #     h_namespace_t nhandle = namespace._handle
         #     h_marray_record_t handle
 
         # try:
@@ -407,8 +391,8 @@ cdef class StringArray(MDSArrayBase):
     def from_namespace(cls, Namespace namespace, path) -> Optional[StringArray]:
         # cdef:
         #     String p = __cast_to_mds_string(path)
-        #     interned_string_handle ish = p._ish
-        #     namespace_handle nhandle = namespace._handle
+        #     h_istring_t ish = p._ish
+        #     h_namespace_t nhandle = namespace._handle
         #     h_marray_string_t handle
 
         # try:
@@ -426,783 +410,6 @@ cdef class StringArray(MDSArrayBase):
 
 # START INJECTION | tmpl_array_primitives(Primitives)
 
-cdef class BoolArray(MDSArrayBase):
-
-    cdef h_marray_bool_t _handle
-    _primitive = Bool
-
-    def __cinit__(self, int length=0):
-        if length:
-            self._handle = create_bool_marray(<size_t> length)
-
-    def __len__(self):
-        return self._handle.size()
-
-    def __hash__(self):
-        return self._handle.hash1()
-
-    property dtype:
-        def __get__(self):
-            return mds.typing.primitives.bool
-
-    @classmethod
-    def from_namespace(cls, Namespace namespace, path) -> Optional[BoolArray]:
-        cdef:
-            String p = __cast_to_mds_string(path)
-            interned_string_handle ish = p._ish
-            namespace_handle nhandle = namespace._handle
-            h_marray_bool_t handle
-
-        try:
-            handle = nhandle.lookup_bool_array(ish, h_array_bool_t())
-            retval = BoolArray()
-            retval._handle = handle
-            return retval
-        except:
-            return None
-
-    def bind_to_namespace(self, Namespace namespace):
-        pass  # TODO: See how these properly bind
-
-cdef class ByteArray(MDSIntArrayBase):
-
-    cdef h_marray_byte_t _handle
-    _primitive = Byte
-
-    def __cinit__(self, int length=0):
-        if length:
-            self._handle = create_byte_marray(<size_t> length)
-
-    def __len__(self):
-        return self._handle.size()
-
-    def __hash__(self):
-        return self._handle.hash1()
-
-    property dtype:
-        def __get__(self):
-            return mds.typing.primitives.byte
-
-    @classmethod
-    def from_namespace(cls, Namespace namespace, path) -> Optional[ByteArray]:
-        cdef:
-            String p = __cast_to_mds_string(path)
-            interned_string_handle ish = p._ish
-            namespace_handle nhandle = namespace._handle
-            h_marray_byte_t handle
-
-        try:
-            handle = nhandle.lookup_byte_array(ish, h_array_byte_t())
-            retval = ByteArray()
-            retval._handle = handle
-            return retval
-        except:
-            return None
-
-    def bind_to_namespace(self, Namespace namespace):
-        pass  # TODO: See how these properly bind
-
-    def _numeric_bounds_check(self, value):
-        prim = Byte(value)
-        return prim.python_value
-
-    def _to_python(self, index):
-        return byte_to_core_val(self._handle.frozen_read(index))
-
-    def _to_mds(self, index, value):
-        # Delegate bounds checking etc. to the primitive wrapper
-        wrapped = self._primitive(value)
-        self._handle.write(index, mv_byte(value))
-
-    def copy(self):
-        cdef:
-            size_t i = 0
-            size_t n = len(self)
-
-        retval = ByteArray(length=len(self))
-
-        for i in range(n):
-            retval[i] = self[i]
-
-        return retval
-
-    def __iadd__(self, other):
-        return self._handle.add(self._last_index, <int8_t> other)
-
-    def __isub__(self, other):
-        return self._handle.sub(self._last_index, <int8_t> other)
-
-    def __imul__(self, other):
-        return self._handle.mul(self._last_index, <int8_t> other)
-
-    def __itruediv__(self, other):
-        return self._handle.div(self._last_index, <int8_t> other)
-
-cdef class UByteArray(MDSIntArrayBase):
-
-    cdef h_marray_ubyte_t _handle
-    _primitive = UByte
-
-    def __cinit__(self, int length=0):
-        if length:
-            self._handle = create_ubyte_marray(<size_t> length)
-
-    def __len__(self):
-        return self._handle.size()
-
-    def __hash__(self):
-        return self._handle.hash1()
-
-    property dtype:
-        def __get__(self):
-            return mds.typing.primitives.ubyte
-
-    @classmethod
-    def from_namespace(cls, Namespace namespace, path) -> Optional[UByteArray]:
-        cdef:
-            String p = __cast_to_mds_string(path)
-            interned_string_handle ish = p._ish
-            namespace_handle nhandle = namespace._handle
-            h_marray_ubyte_t handle
-
-        try:
-            handle = nhandle.lookup_ubyte_array(ish, h_array_ubyte_t())
-            retval = UByteArray()
-            retval._handle = handle
-            return retval
-        except:
-            return None
-
-    def bind_to_namespace(self, Namespace namespace):
-        pass  # TODO: See how these properly bind
-
-    def _numeric_bounds_check(self, value):
-        prim = UByte(value)
-        return prim.python_value
-
-    def _to_python(self, index):
-        return ubyte_to_core_val(self._handle.frozen_read(index))
-
-    def _to_mds(self, index, value):
-        # Delegate bounds checking etc. to the primitive wrapper
-        wrapped = self._primitive(value)
-        self._handle.write(index, mv_ubyte(value))
-
-    def copy(self):
-        cdef:
-            size_t i = 0
-            size_t n = len(self)
-
-        retval = UByteArray(length=len(self))
-
-        for i in range(n):
-            retval[i] = self[i]
-
-        return retval
-
-    def __iadd__(self, other):
-        return self._handle.add(self._last_index, <uint8_t> other)
-
-    def __isub__(self, other):
-        return self._handle.sub(self._last_index, <uint8_t> other)
-
-    def __imul__(self, other):
-        return self._handle.mul(self._last_index, <uint8_t> other)
-
-    def __itruediv__(self, other):
-        return self._handle.div(self._last_index, <uint8_t> other)
-
-cdef class ShortArray(MDSIntArrayBase):
-
-    cdef h_marray_short_t _handle
-    _primitive = Short
-
-    def __cinit__(self, int length=0):
-        if length:
-            self._handle = create_short_marray(<size_t> length)
-
-    def __len__(self):
-        return self._handle.size()
-
-    def __hash__(self):
-        return self._handle.hash1()
-
-    property dtype:
-        def __get__(self):
-            return mds.typing.primitives.short
-
-    @classmethod
-    def from_namespace(cls, Namespace namespace, path) -> Optional[ShortArray]:
-        cdef:
-            String p = __cast_to_mds_string(path)
-            interned_string_handle ish = p._ish
-            namespace_handle nhandle = namespace._handle
-            h_marray_short_t handle
-
-        try:
-            handle = nhandle.lookup_short_array(ish, h_array_short_t())
-            retval = ShortArray()
-            retval._handle = handle
-            return retval
-        except:
-            return None
-
-    def bind_to_namespace(self, Namespace namespace):
-        pass  # TODO: See how these properly bind
-
-    def _numeric_bounds_check(self, value):
-        prim = Short(value)
-        return prim.python_value
-
-    def _to_python(self, index):
-        return short_to_core_val(self._handle.frozen_read(index))
-
-    def _to_mds(self, index, value):
-        # Delegate bounds checking etc. to the primitive wrapper
-        wrapped = self._primitive(value)
-        self._handle.write(index, mv_short(value))
-
-    def copy(self):
-        cdef:
-            size_t i = 0
-            size_t n = len(self)
-
-        retval = ShortArray(length=len(self))
-
-        for i in range(n):
-            retval[i] = self[i]
-
-        return retval
-
-    def __iadd__(self, other):
-        return self._handle.add(self._last_index, <int16_t> other)
-
-    def __isub__(self, other):
-        return self._handle.sub(self._last_index, <int16_t> other)
-
-    def __imul__(self, other):
-        return self._handle.mul(self._last_index, <int16_t> other)
-
-    def __itruediv__(self, other):
-        return self._handle.div(self._last_index, <int16_t> other)
-
-cdef class UShortArray(MDSIntArrayBase):
-
-    cdef h_marray_ushort_t _handle
-    _primitive = UShort
-
-    def __cinit__(self, int length=0):
-        if length:
-            self._handle = create_ushort_marray(<size_t> length)
-
-    def __len__(self):
-        return self._handle.size()
-
-    def __hash__(self):
-        return self._handle.hash1()
-
-    property dtype:
-        def __get__(self):
-            return mds.typing.primitives.ushort
-
-    @classmethod
-    def from_namespace(cls, Namespace namespace, path) -> Optional[UShortArray]:
-        cdef:
-            String p = __cast_to_mds_string(path)
-            interned_string_handle ish = p._ish
-            namespace_handle nhandle = namespace._handle
-            h_marray_ushort_t handle
-
-        try:
-            handle = nhandle.lookup_ushort_array(ish, h_array_ushort_t())
-            retval = UShortArray()
-            retval._handle = handle
-            return retval
-        except:
-            return None
-
-    def bind_to_namespace(self, Namespace namespace):
-        pass  # TODO: See how these properly bind
-
-    def _numeric_bounds_check(self, value):
-        prim = UShort(value)
-        return prim.python_value
-
-    def _to_python(self, index):
-        return ushort_to_core_val(self._handle.frozen_read(index))
-
-    def _to_mds(self, index, value):
-        # Delegate bounds checking etc. to the primitive wrapper
-        wrapped = self._primitive(value)
-        self._handle.write(index, mv_ushort(value))
-
-    def copy(self):
-        cdef:
-            size_t i = 0
-            size_t n = len(self)
-
-        retval = UShortArray(length=len(self))
-
-        for i in range(n):
-            retval[i] = self[i]
-
-        return retval
-
-    def __iadd__(self, other):
-        return self._handle.add(self._last_index, <uint16_t> other)
-
-    def __isub__(self, other):
-        return self._handle.sub(self._last_index, <uint16_t> other)
-
-    def __imul__(self, other):
-        return self._handle.mul(self._last_index, <uint16_t> other)
-
-    def __itruediv__(self, other):
-        return self._handle.div(self._last_index, <uint16_t> other)
-
-cdef class IntArray(MDSIntArrayBase):
-
-    cdef h_marray_int_t _handle
-    _primitive = Int
-
-    def __cinit__(self, int length=0):
-        if length:
-            self._handle = create_int_marray(<size_t> length)
-
-    def __len__(self):
-        return self._handle.size()
-
-    def __hash__(self):
-        return self._handle.hash1()
-
-    property dtype:
-        def __get__(self):
-            return mds.typing.primitives.int
-
-    @classmethod
-    def from_namespace(cls, Namespace namespace, path) -> Optional[IntArray]:
-        cdef:
-            String p = __cast_to_mds_string(path)
-            interned_string_handle ish = p._ish
-            namespace_handle nhandle = namespace._handle
-            h_marray_int_t handle
-
-        try:
-            handle = nhandle.lookup_int_array(ish, h_array_int_t())
-            retval = IntArray()
-            retval._handle = handle
-            return retval
-        except:
-            return None
-
-    def bind_to_namespace(self, Namespace namespace):
-        pass  # TODO: See how these properly bind
-
-    def _numeric_bounds_check(self, value):
-        prim = Int(value)
-        return prim.python_value
-
-    def _to_python(self, index):
-        return int_to_core_val(self._handle.frozen_read(index))
-
-    def _to_mds(self, index, value):
-        # Delegate bounds checking etc. to the primitive wrapper
-        wrapped = self._primitive(value)
-        self._handle.write(index, mv_int(value))
-
-    def copy(self):
-        cdef:
-            size_t i = 0
-            size_t n = len(self)
-
-        retval = IntArray(length=len(self))
-
-        for i in range(n):
-            retval[i] = self[i]
-
-        return retval
-
-    def __iadd__(self, other):
-        return self._handle.add(self._last_index, <int32_t> other)
-
-    def __isub__(self, other):
-        return self._handle.sub(self._last_index, <int32_t> other)
-
-    def __imul__(self, other):
-        return self._handle.mul(self._last_index, <int32_t> other)
-
-    def __itruediv__(self, other):
-        return self._handle.div(self._last_index, <int32_t> other)
-
-cdef class UIntArray(MDSIntArrayBase):
-
-    cdef h_marray_uint_t _handle
-    _primitive = UInt
-
-    def __cinit__(self, int length=0):
-        if length:
-            self._handle = create_uint_marray(<size_t> length)
-
-    def __len__(self):
-        return self._handle.size()
-
-    def __hash__(self):
-        return self._handle.hash1()
-
-    property dtype:
-        def __get__(self):
-            return mds.typing.primitives.uint
-
-    @classmethod
-    def from_namespace(cls, Namespace namespace, path) -> Optional[UIntArray]:
-        cdef:
-            String p = __cast_to_mds_string(path)
-            interned_string_handle ish = p._ish
-            namespace_handle nhandle = namespace._handle
-            h_marray_uint_t handle
-
-        try:
-            handle = nhandle.lookup_uint_array(ish, h_array_uint_t())
-            retval = UIntArray()
-            retval._handle = handle
-            return retval
-        except:
-            return None
-
-    def bind_to_namespace(self, Namespace namespace):
-        pass  # TODO: See how these properly bind
-
-    def _numeric_bounds_check(self, value):
-        prim = UInt(value)
-        return prim.python_value
-
-    def _to_python(self, index):
-        return uint_to_core_val(self._handle.frozen_read(index))
-
-    def _to_mds(self, index, value):
-        # Delegate bounds checking etc. to the primitive wrapper
-        wrapped = self._primitive(value)
-        self._handle.write(index, mv_uint(value))
-
-    def copy(self):
-        cdef:
-            size_t i = 0
-            size_t n = len(self)
-
-        retval = UIntArray(length=len(self))
-
-        for i in range(n):
-            retval[i] = self[i]
-
-        return retval
-
-    def __iadd__(self, other):
-        return self._handle.add(self._last_index, <uint32_t> other)
-
-    def __isub__(self, other):
-        return self._handle.sub(self._last_index, <uint32_t> other)
-
-    def __imul__(self, other):
-        return self._handle.mul(self._last_index, <uint32_t> other)
-
-    def __itruediv__(self, other):
-        return self._handle.div(self._last_index, <uint32_t> other)
-
-cdef class LongArray(MDSIntArrayBase):
-
-    cdef h_marray_long_t _handle
-    _primitive = Long
-
-    def __cinit__(self, int length=0):
-        if length:
-            self._handle = create_long_marray(<size_t> length)
-
-    def __len__(self):
-        return self._handle.size()
-
-    def __hash__(self):
-        return self._handle.hash1()
-
-    property dtype:
-        def __get__(self):
-            return mds.typing.primitives.long
-
-    @classmethod
-    def from_namespace(cls, Namespace namespace, path) -> Optional[LongArray]:
-        cdef:
-            String p = __cast_to_mds_string(path)
-            interned_string_handle ish = p._ish
-            namespace_handle nhandle = namespace._handle
-            h_marray_long_t handle
-
-        try:
-            handle = nhandle.lookup_long_array(ish, h_array_long_t())
-            retval = LongArray()
-            retval._handle = handle
-            return retval
-        except:
-            return None
-
-    def bind_to_namespace(self, Namespace namespace):
-        pass  # TODO: See how these properly bind
-
-    def _numeric_bounds_check(self, value):
-        prim = Long(value)
-        return prim.python_value
-
-    def _to_python(self, index):
-        return long_to_core_val(self._handle.frozen_read(index))
-
-    def _to_mds(self, index, value):
-        # Delegate bounds checking etc. to the primitive wrapper
-        wrapped = self._primitive(value)
-        self._handle.write(index, mv_long(value))
-
-    def copy(self):
-        cdef:
-            size_t i = 0
-            size_t n = len(self)
-
-        retval = LongArray(length=len(self))
-
-        for i in range(n):
-            retval[i] = self[i]
-
-        return retval
-
-    def __iadd__(self, other):
-        return self._handle.add(self._last_index, <int64_t> other)
-
-    def __isub__(self, other):
-        return self._handle.sub(self._last_index, <int64_t> other)
-
-    def __imul__(self, other):
-        return self._handle.mul(self._last_index, <int64_t> other)
-
-    def __itruediv__(self, other):
-        return self._handle.div(self._last_index, <int64_t> other)
-
-cdef class ULongArray(MDSIntArrayBase):
-
-    cdef h_marray_ulong_t _handle
-    _primitive = ULong
-
-    def __cinit__(self, int length=0):
-        if length:
-            self._handle = create_ulong_marray(<size_t> length)
-
-    def __len__(self):
-        return self._handle.size()
-
-    def __hash__(self):
-        return self._handle.hash1()
-
-    property dtype:
-        def __get__(self):
-            return mds.typing.primitives.ulong
-
-    @classmethod
-    def from_namespace(cls, Namespace namespace, path) -> Optional[ULongArray]:
-        cdef:
-            String p = __cast_to_mds_string(path)
-            interned_string_handle ish = p._ish
-            namespace_handle nhandle = namespace._handle
-            h_marray_ulong_t handle
-
-        try:
-            handle = nhandle.lookup_ulong_array(ish, h_array_ulong_t())
-            retval = ULongArray()
-            retval._handle = handle
-            return retval
-        except:
-            return None
-
-    def bind_to_namespace(self, Namespace namespace):
-        pass  # TODO: See how these properly bind
-
-    def _numeric_bounds_check(self, value):
-        prim = ULong(value)
-        return prim.python_value
-
-    def _to_python(self, index):
-        return ulong_to_core_val(self._handle.frozen_read(index))
-
-    def _to_mds(self, index, value):
-        # Delegate bounds checking etc. to the primitive wrapper
-        wrapped = self._primitive(value)
-        self._handle.write(index, mv_ulong(value))
-
-    def copy(self):
-        cdef:
-            size_t i = 0
-            size_t n = len(self)
-
-        retval = ULongArray(length=len(self))
-
-        for i in range(n):
-            retval[i] = self[i]
-
-        return retval
-
-    def __iadd__(self, other):
-        return self._handle.add(self._last_index, <uint64_t> other)
-
-    def __isub__(self, other):
-        return self._handle.sub(self._last_index, <uint64_t> other)
-
-    def __imul__(self, other):
-        return self._handle.mul(self._last_index, <uint64_t> other)
-
-    def __itruediv__(self, other):
-        return self._handle.div(self._last_index, <uint64_t> other)
-
-cdef class FloatArray(MDSFloatArrayBase):
-
-    cdef h_marray_float_t _handle
-    _primitive = Float
-
-    def __cinit__(self, int length=0):
-        if length:
-            self._handle = create_float_marray(<size_t> length)
-
-    def __len__(self):
-        return self._handle.size()
-
-    def __hash__(self):
-        return self._handle.hash1()
-
-    property dtype:
-        def __get__(self):
-            return mds.typing.primitives.float
-
-    @classmethod
-    def from_namespace(cls, Namespace namespace, path) -> Optional[FloatArray]:
-        cdef:
-            String p = __cast_to_mds_string(path)
-            interned_string_handle ish = p._ish
-            namespace_handle nhandle = namespace._handle
-            h_marray_float_t handle
-
-        try:
-            handle = nhandle.lookup_float_array(ish, h_array_float_t())
-            retval = FloatArray()
-            retval._handle = handle
-            return retval
-        except:
-            return None
-
-    def bind_to_namespace(self, Namespace namespace):
-        pass  # TODO: See how these properly bind
-
-    def _numeric_bounds_check(self, value):
-        prim = Float(value)
-        return prim.python_value
-
-    def _to_python(self, index):
-        return float_to_core_val(self._handle.frozen_read(index))
-
-    def _to_mds(self, index, value):
-        # Delegate bounds checking etc. to the primitive wrapper
-        wrapped = self._primitive(value)
-        self._handle.write(index, mv_float(value))
-
-    def copy(self):
-        cdef:
-            size_t i = 0
-            size_t n = len(self)
-
-        retval = FloatArray(length=len(self))
-
-        for i in range(n):
-            retval[i] = self[i]
-
-        return retval
-
-    def __iadd__(self, other):
-        return self._handle.add(self._last_index, <float> other)
-
-    def __isub__(self, other):
-        return self._handle.sub(self._last_index, <float> other)
-
-    def __imul__(self, other):
-        return self._handle.mul(self._last_index, <float> other)
-
-    def __itruediv__(self, other):
-        return self._handle.div(self._last_index, <float> other)
-
-cdef class DoubleArray(MDSFloatArrayBase):
-
-    cdef h_marray_double_t _handle
-    _primitive = Double
-
-    def __cinit__(self, int length=0):
-        if length:
-            self._handle = create_double_marray(<size_t> length)
-
-    def __len__(self):
-        return self._handle.size()
-
-    def __hash__(self):
-        return self._handle.hash1()
-
-    property dtype:
-        def __get__(self):
-            return mds.typing.primitives.double
-
-    @classmethod
-    def from_namespace(cls, Namespace namespace, path) -> Optional[DoubleArray]:
-        cdef:
-            String p = __cast_to_mds_string(path)
-            interned_string_handle ish = p._ish
-            namespace_handle nhandle = namespace._handle
-            h_marray_double_t handle
-
-        try:
-            handle = nhandle.lookup_double_array(ish, h_array_double_t())
-            retval = DoubleArray()
-            retval._handle = handle
-            return retval
-        except:
-            return None
-
-    def bind_to_namespace(self, Namespace namespace):
-        pass  # TODO: See how these properly bind
-
-    def _numeric_bounds_check(self, value):
-        prim = Double(value)
-        return prim.python_value
-
-    def _to_python(self, index):
-        return double_to_core_val(self._handle.frozen_read(index))
-
-    def _to_mds(self, index, value):
-        # Delegate bounds checking etc. to the primitive wrapper
-        wrapped = self._primitive(value)
-        self._handle.write(index, mv_double(value))
-
-    def copy(self):
-        cdef:
-            size_t i = 0
-            size_t n = len(self)
-
-        retval = DoubleArray(length=len(self))
-
-        for i in range(n):
-            retval[i] = self[i]
-
-        return retval
-
-    def __iadd__(self, other):
-        return self._handle.add(self._last_index, <double> other)
-
-    def __isub__(self, other):
-        return self._handle.sub(self._last_index, <double> other)
-
-    def __imul__(self, other):
-        return self._handle.mul(self._last_index, <double> other)
-
-    def __itruediv__(self, other):
-        return self._handle.div(self._last_index, <double> other)
 # END INJECTION
 
 # =========================================================================
@@ -1229,8 +436,8 @@ cdef __RECORD_DECLARED_TYPES = dict()
 cdef __RECORD_IDENTS = dict()
 cdef __RECORD_PROXIES = defaultdict(set)
 
-cdef implant_record_handle(Record record, MDSConstRecordHandleWrapper wrapper):
-    cdef const_record_type_handle handle = wrapper._handle
+cdef implant_record_handle(Record record, MDSRecordHandleWrapper wrapper):
+    cdef h_c_record_type_t handle = wrapper._handle
     record._handle = handle.create_record()
 
 
@@ -1258,7 +465,7 @@ cdef class Record(MDSObject):
 
     TODO: implement __getitem__ and __setitem__ to mask the write() read() ops, maybe make this primary?
     """
-    cdef managed_record_handle _handle
+    cdef h_mrecord_t _handle
 
     def __cinit__(self):
         if self.__class__ is Record:
@@ -1327,8 +534,8 @@ cdef class Record(MDSObject):
 
     def bind_to_namespace(self, Namespace namespace, String name) -> None:
         cdef:
-            interned_string_handle nhandle = name._ish
-            namespace_handle h = namespace._handle
+            h_istring_t nhandle = name._ish
+            h_namespace_t h = namespace._handle
 
         # h.bind_record(nhandle, self._handle)
 
@@ -1352,7 +559,7 @@ cdef class Record(MDSObject):
         raise TypeError("Derived `Record`s should return a `dict` detailing the schema here.")
 
 
-def declare_field(type_decl: MDSTypeInfo, make_const=False) -> MDSRecordFieldMemberPair:
+def declare_field(type_decl: MDSTypeInfo) -> MDSRecordFieldMemberPair:
     """
     This returns the derived RecordField for the combination of the arguments.
 
@@ -1362,7 +569,6 @@ def declare_field(type_decl: MDSTypeInfo, make_const=False) -> MDSRecordFieldMem
 
     Args:
         type_decl:  MDSTypeInfo, obtained from `mds.typing`
-        make_const: Bool, whether to make the associated RecordMember make_const or not
     """
     if not isinstance(type_decl, MDSTypeInfo):
         raise TypeError("First parameter needs to be a type from `mds.typing`")
@@ -1370,19 +576,9 @@ def declare_field(type_decl: MDSTypeInfo, make_const=False) -> MDSRecordFieldMem
     # Now, let's see if it's known and of the correct lineage
     field_t = globals()[type_decl.title_record_field]
     assert issubclass(field_t, MDSRecordFieldBase)
-
-    if make_const:
-        identifier = type_decl.title_const_record_member
-        base = MDSConstRecordMemberBase
-    else:
-        identifier = type_decl.title_record_member
-        base = MDSRecordMemberBase
-
+    identifier = type_decl.title_record_member
     member_t = globals()[identifier]
-    assert issubclass(member_t, base)
-
-    # DEBUG
-    print(f"?> Making pair {field_t.__name__}, {member_t.__name__}")
+    assert issubclass(member_t, MDSRecordMemberBase)
 
     # Unlike the CAPI we return both the instantiated field and a type for the member
     return MDSRecordFieldMemberPair(field=field_t(), member=member_t)
@@ -1394,14 +590,14 @@ cdef class MDSManagedRecordType(MDSObject):
     def __cinit__(self, parent: Record):
         self._parent = parent
 
-    def ensure_created(self) -> MDSConstRecordHandleWrapper:
+    def ensure_created(self) -> MDSRecordHandleWrapper:
         return self._parent.type_decl.ensure_created()
 
     @staticmethod
-    def ensure_complete(klass: type) -> MDSConstRecordHandleWrapper:
+    def ensure_complete(klass: type) -> MDSRecordHandleWrapper:
         return klass.type_decl.ensure_created()
 
-    def from_core(self, handle: MDSConstRecordHandleWrapper) -> Record:
+    def from_core(self, handle: MDSRecordHandleWrapper) -> Record:
   # mds_ptr<R> from_core(const Record::handle_t &val) const {
   #   if (val == nullptr) {
   #     return nullptr;
@@ -1411,13 +607,13 @@ cdef class MDSManagedRecordType(MDSObject):
         pass
 
     def to_core(self):
-  # core_api_type to_core(const mds_ptr<R> &val) const {
-  #   core_api_type tcv = val == nullptr ? core_api_type { } : val->_handle;
+  # core_type to_core(const mds_ptr<R> &val) const {
+  #   core_type tcv = val == nullptr ? core_type { } : val->_handle;
   #   return tcv;
   # }
 
-  # core_api_type to_core(const mds_ptr<const R> &val) const {
-  #   return val == nullptr ? core_api_type { } : val->_handle;
+  # core_type to_core(const mds_ptr<const R> &val) const {
+  #   return val == nullptr ? core_type { } : val->_handle;
   # }
         pass
 
@@ -1456,7 +652,7 @@ cdef class MDSRecordFieldBase(MDSObject):
         # constness, how to pass this through?
         # TODO: Double check this on the CAPI, seems to make sense on a per-meber
         #       granularity, though the CAPI looks like it's at Record
-        return self.get_reference_type(make_const=member.is_const)(self, member.record)
+        return self.get_reference_type()(self, member.record)
 
     def ensure_type(self):
         """
@@ -1478,404 +674,22 @@ cdef class MDSRecordFieldBase(MDSObject):
         pass
 
     @staticmethod
-    def get_reference_type(make_const=False) -> type:
+    def get_reference_type() -> type:
         return None
 
 # START INJECTION | tmpl_record_field_primitives(Primitives)
 
-cdef class MDSBoolRecordField(MDSRecordFieldBase):
-    cdef:
-        h_rfield_bool_t _handle
-
-    def declare(self, String name, MDSRecordTypeDeclaration rt):
-        assert self._handle.is_null()
-        print("?> Attempting to get a handle from h_const_array_bool_t.field_in")
-        self._handle = h_rfield_bool_t(h_const_mbool_t().field_in(rt._declared_type, name._ish, True))
-
-    @staticmethod
-    def get_reference_type(make_const=False) -> type:
-        if make_const:
-            return MDSConstBoolRecordFieldReference
-
-        return MDSBoolRecordFieldReference
-
-cdef class MDSByteRecordField(MDSRecordFieldBase):
-    cdef:
-        h_rfield_byte_t _handle
-
-    def declare(self, String name, MDSRecordTypeDeclaration rt):
-        assert self._handle.is_null()
-        print("?> Attempting to get a handle from h_const_array_byte_t.field_in")
-        self._handle = h_rfield_byte_t(h_const_mbyte_t().field_in(rt._declared_type, name._ish, True))
-
-    @staticmethod
-    def get_reference_type(make_const=False) -> type:
-        if make_const:
-            return MDSConstByteRecordFieldReference
-
-        return MDSByteRecordFieldReference
-
-cdef class MDSUByteRecordField(MDSRecordFieldBase):
-    cdef:
-        h_rfield_ubyte_t _handle
-
-    def declare(self, String name, MDSRecordTypeDeclaration rt):
-        assert self._handle.is_null()
-        print("?> Attempting to get a handle from h_const_array_ubyte_t.field_in")
-        self._handle = h_rfield_ubyte_t(h_const_mubyte_t().field_in(rt._declared_type, name._ish, True))
-
-    @staticmethod
-    def get_reference_type(make_const=False) -> type:
-        if make_const:
-            return MDSConstUByteRecordFieldReference
-
-        return MDSUByteRecordFieldReference
-
-cdef class MDSShortRecordField(MDSRecordFieldBase):
-    cdef:
-        h_rfield_short_t _handle
-
-    def declare(self, String name, MDSRecordTypeDeclaration rt):
-        assert self._handle.is_null()
-        print("?> Attempting to get a handle from h_const_array_short_t.field_in")
-        self._handle = h_rfield_short_t(h_const_mshort_t().field_in(rt._declared_type, name._ish, True))
-
-    @staticmethod
-    def get_reference_type(make_const=False) -> type:
-        if make_const:
-            return MDSConstShortRecordFieldReference
-
-        return MDSShortRecordFieldReference
-
-cdef class MDSUShortRecordField(MDSRecordFieldBase):
-    cdef:
-        h_rfield_ushort_t _handle
-
-    def declare(self, String name, MDSRecordTypeDeclaration rt):
-        assert self._handle.is_null()
-        print("?> Attempting to get a handle from h_const_array_ushort_t.field_in")
-        self._handle = h_rfield_ushort_t(h_const_mushort_t().field_in(rt._declared_type, name._ish, True))
-
-    @staticmethod
-    def get_reference_type(make_const=False) -> type:
-        if make_const:
-            return MDSConstUShortRecordFieldReference
-
-        return MDSUShortRecordFieldReference
-
-cdef class MDSIntRecordField(MDSRecordFieldBase):
-    cdef:
-        h_rfield_int_t _handle
-
-    def declare(self, String name, MDSRecordTypeDeclaration rt):
-        assert self._handle.is_null()
-        print("?> Attempting to get a handle from h_const_array_int_t.field_in")
-        self._handle = h_rfield_int_t(h_const_mint_t().field_in(rt._declared_type, name._ish, True))
-
-    @staticmethod
-    def get_reference_type(make_const=False) -> type:
-        if make_const:
-            return MDSConstIntRecordFieldReference
-
-        return MDSIntRecordFieldReference
-
-cdef class MDSUIntRecordField(MDSRecordFieldBase):
-    cdef:
-        h_rfield_uint_t _handle
-
-    def declare(self, String name, MDSRecordTypeDeclaration rt):
-        assert self._handle.is_null()
-        print("?> Attempting to get a handle from h_const_array_uint_t.field_in")
-        self._handle = h_rfield_uint_t(h_const_muint_t().field_in(rt._declared_type, name._ish, True))
-
-    @staticmethod
-    def get_reference_type(make_const=False) -> type:
-        if make_const:
-            return MDSConstUIntRecordFieldReference
-
-        return MDSUIntRecordFieldReference
-
-cdef class MDSLongRecordField(MDSRecordFieldBase):
-    cdef:
-        h_rfield_long_t _handle
-
-    def declare(self, String name, MDSRecordTypeDeclaration rt):
-        assert self._handle.is_null()
-        print("?> Attempting to get a handle from h_const_array_long_t.field_in")
-        self._handle = h_rfield_long_t(h_const_mlong_t().field_in(rt._declared_type, name._ish, True))
-
-    @staticmethod
-    def get_reference_type(make_const=False) -> type:
-        if make_const:
-            return MDSConstLongRecordFieldReference
-
-        return MDSLongRecordFieldReference
-
-cdef class MDSULongRecordField(MDSRecordFieldBase):
-    cdef:
-        h_rfield_ulong_t _handle
-
-    def declare(self, String name, MDSRecordTypeDeclaration rt):
-        assert self._handle.is_null()
-        print("?> Attempting to get a handle from h_const_array_ulong_t.field_in")
-        self._handle = h_rfield_ulong_t(h_const_mulong_t().field_in(rt._declared_type, name._ish, True))
-
-    @staticmethod
-    def get_reference_type(make_const=False) -> type:
-        if make_const:
-            return MDSConstULongRecordFieldReference
-
-        return MDSULongRecordFieldReference
-
-cdef class MDSFloatRecordField(MDSRecordFieldBase):
-    cdef:
-        h_rfield_float_t _handle
-
-    def declare(self, String name, MDSRecordTypeDeclaration rt):
-        assert self._handle.is_null()
-        print("?> Attempting to get a handle from h_const_array_float_t.field_in")
-        self._handle = h_rfield_float_t(h_const_mfloat_t().field_in(rt._declared_type, name._ish, True))
-
-    @staticmethod
-    def get_reference_type(make_const=False) -> type:
-        if make_const:
-            return MDSConstFloatRecordFieldReference
-
-        return MDSFloatRecordFieldReference
-
-cdef class MDSDoubleRecordField(MDSRecordFieldBase):
-    cdef:
-        h_rfield_double_t _handle
-
-    def declare(self, String name, MDSRecordTypeDeclaration rt):
-        assert self._handle.is_null()
-        print("?> Attempting to get a handle from h_const_array_double_t.field_in")
-        self._handle = h_rfield_double_t(h_const_mdouble_t().field_in(rt._declared_type, name._ish, True))
-
-    @staticmethod
-    def get_reference_type(make_const=False) -> type:
-        if make_const:
-            return MDSConstDoubleRecordFieldReference
-
-        return MDSDoubleRecordFieldReference
 # END INJECTION
 
 # START INJECTION | tmpl_record_field_arrays(Arrays)
 
-cdef class MDSBoolArrayRecordField(MDSRecordFieldBase):
-    cdef:
-        h_rfield_array_bool_t _handle
-
-    def declare(self, String name, MDSRecordTypeDeclaration rt):
-        assert self._handle.is_null()
-        print("?> Attempting to get a handle from h_const_mbool_t.field_in")
-        self._handle = h_rfield_array_bool_t(h_const_array_bool_t().field_in(rt._declared_type, name._ish, True))
-
-    @staticmethod
-    def get_reference_type(make_const=False) -> type:
-        if make_const:
-            return MDSConstBoolArrayRecordFieldReference
-
-        return MDSBoolArrayRecordFieldReference
-
-cdef class MDSByteArrayRecordField(MDSRecordFieldBase):
-    cdef:
-        h_rfield_array_byte_t _handle
-
-    def declare(self, String name, MDSRecordTypeDeclaration rt):
-        assert self._handle.is_null()
-        print("?> Attempting to get a handle from h_const_mbyte_t.field_in")
-        self._handle = h_rfield_array_byte_t(h_const_array_byte_t().field_in(rt._declared_type, name._ish, True))
-
-    @staticmethod
-    def get_reference_type(make_const=False) -> type:
-        if make_const:
-            return MDSConstByteArrayRecordFieldReference
-
-        return MDSByteArrayRecordFieldReference
-
-cdef class MDSUByteArrayRecordField(MDSRecordFieldBase):
-    cdef:
-        h_rfield_array_ubyte_t _handle
-
-    def declare(self, String name, MDSRecordTypeDeclaration rt):
-        assert self._handle.is_null()
-        print("?> Attempting to get a handle from h_const_mubyte_t.field_in")
-        self._handle = h_rfield_array_ubyte_t(h_const_array_ubyte_t().field_in(rt._declared_type, name._ish, True))
-
-    @staticmethod
-    def get_reference_type(make_const=False) -> type:
-        if make_const:
-            return MDSConstUByteArrayRecordFieldReference
-
-        return MDSUByteArrayRecordFieldReference
-
-cdef class MDSShortArrayRecordField(MDSRecordFieldBase):
-    cdef:
-        h_rfield_array_short_t _handle
-
-    def declare(self, String name, MDSRecordTypeDeclaration rt):
-        assert self._handle.is_null()
-        print("?> Attempting to get a handle from h_const_mshort_t.field_in")
-        self._handle = h_rfield_array_short_t(h_const_array_short_t().field_in(rt._declared_type, name._ish, True))
-
-    @staticmethod
-    def get_reference_type(make_const=False) -> type:
-        if make_const:
-            return MDSConstShortArrayRecordFieldReference
-
-        return MDSShortArrayRecordFieldReference
-
-cdef class MDSUShortArrayRecordField(MDSRecordFieldBase):
-    cdef:
-        h_rfield_array_ushort_t _handle
-
-    def declare(self, String name, MDSRecordTypeDeclaration rt):
-        assert self._handle.is_null()
-        print("?> Attempting to get a handle from h_const_mushort_t.field_in")
-        self._handle = h_rfield_array_ushort_t(h_const_array_ushort_t().field_in(rt._declared_type, name._ish, True))
-
-    @staticmethod
-    def get_reference_type(make_const=False) -> type:
-        if make_const:
-            return MDSConstUShortArrayRecordFieldReference
-
-        return MDSUShortArrayRecordFieldReference
-
-cdef class MDSIntArrayRecordField(MDSRecordFieldBase):
-    cdef:
-        h_rfield_array_int_t _handle
-
-    def declare(self, String name, MDSRecordTypeDeclaration rt):
-        assert self._handle.is_null()
-        print("?> Attempting to get a handle from h_const_mint_t.field_in")
-        self._handle = h_rfield_array_int_t(h_const_array_int_t().field_in(rt._declared_type, name._ish, True))
-
-    @staticmethod
-    def get_reference_type(make_const=False) -> type:
-        if make_const:
-            return MDSConstIntArrayRecordFieldReference
-
-        return MDSIntArrayRecordFieldReference
-
-cdef class MDSUIntArrayRecordField(MDSRecordFieldBase):
-    cdef:
-        h_rfield_array_uint_t _handle
-
-    def declare(self, String name, MDSRecordTypeDeclaration rt):
-        assert self._handle.is_null()
-        print("?> Attempting to get a handle from h_const_muint_t.field_in")
-        self._handle = h_rfield_array_uint_t(h_const_array_uint_t().field_in(rt._declared_type, name._ish, True))
-
-    @staticmethod
-    def get_reference_type(make_const=False) -> type:
-        if make_const:
-            return MDSConstUIntArrayRecordFieldReference
-
-        return MDSUIntArrayRecordFieldReference
-
-cdef class MDSLongArrayRecordField(MDSRecordFieldBase):
-    cdef:
-        h_rfield_array_long_t _handle
-
-    def declare(self, String name, MDSRecordTypeDeclaration rt):
-        assert self._handle.is_null()
-        print("?> Attempting to get a handle from h_const_mlong_t.field_in")
-        self._handle = h_rfield_array_long_t(h_const_array_long_t().field_in(rt._declared_type, name._ish, True))
-
-    @staticmethod
-    def get_reference_type(make_const=False) -> type:
-        if make_const:
-            return MDSConstLongArrayRecordFieldReference
-
-        return MDSLongArrayRecordFieldReference
-
-cdef class MDSULongArrayRecordField(MDSRecordFieldBase):
-    cdef:
-        h_rfield_array_ulong_t _handle
-
-    def declare(self, String name, MDSRecordTypeDeclaration rt):
-        assert self._handle.is_null()
-        print("?> Attempting to get a handle from h_const_mulong_t.field_in")
-        self._handle = h_rfield_array_ulong_t(h_const_array_ulong_t().field_in(rt._declared_type, name._ish, True))
-
-    @staticmethod
-    def get_reference_type(make_const=False) -> type:
-        if make_const:
-            return MDSConstULongArrayRecordFieldReference
-
-        return MDSULongArrayRecordFieldReference
-
-cdef class MDSFloatArrayRecordField(MDSRecordFieldBase):
-    cdef:
-        h_rfield_array_float_t _handle
-
-    def declare(self, String name, MDSRecordTypeDeclaration rt):
-        assert self._handle.is_null()
-        print("?> Attempting to get a handle from h_const_mfloat_t.field_in")
-        self._handle = h_rfield_array_float_t(h_const_array_float_t().field_in(rt._declared_type, name._ish, True))
-
-    @staticmethod
-    def get_reference_type(make_const=False) -> type:
-        if make_const:
-            return MDSConstFloatArrayRecordFieldReference
-
-        return MDSFloatArrayRecordFieldReference
-
-cdef class MDSDoubleArrayRecordField(MDSRecordFieldBase):
-    cdef:
-        h_rfield_array_double_t _handle
-
-    def declare(self, String name, MDSRecordTypeDeclaration rt):
-        assert self._handle.is_null()
-        print("?> Attempting to get a handle from h_const_mdouble_t.field_in")
-        self._handle = h_rfield_array_double_t(h_const_array_double_t().field_in(rt._declared_type, name._ish, True))
-
-    @staticmethod
-    def get_reference_type(make_const=False) -> type:
-        if make_const:
-            return MDSConstDoubleArrayRecordFieldReference
-
-        return MDSDoubleArrayRecordFieldReference
-
-cdef class MDSStringArrayRecordField(MDSRecordFieldBase):
-    cdef:
-        h_rfield_array_string_t _handle
-
-    def declare(self, String name, MDSRecordTypeDeclaration rt):
-        assert self._handle.is_null()
-        print("?> Attempting to get a handle from h_const_mstring_t.field_in")
-        self._handle = h_rfield_array_string_t(h_const_array_string_t().field_in(rt._declared_type, name._ish, True))
-
-    @staticmethod
-    def get_reference_type(make_const=False) -> type:
-        if make_const:
-            return MDSConstStringArrayRecordFieldReference
-
-        return MDSStringArrayRecordFieldReference
-
-cdef class MDSRecordArrayRecordField(MDSRecordFieldBase):
-    cdef:
-        h_rfield_array_record_t _handle
-
-    def declare(self, String name, MDSRecordTypeDeclaration rt):
-        assert self._handle.is_null()
-        print("?> Attempting to get a handle from h_const_mrecord_t.field_in")
-        self._handle = h_rfield_array_record_t(h_const_array_record_t().field_in(rt._declared_type, name._ish, True))
-
-    @staticmethod
-    def get_reference_type(make_const=False) -> type:
-        if make_const:
-            return MDSConstRecordArrayRecordFieldReference
-
-        return MDSRecordArrayRecordFieldReference
 # END INJECTION
 
 ######################################################################### REFERENCES
 
-cdef class MDSConstRecordFieldReferenceBase(MDSObject):
+cdef class MDSRecordFieldReferenceBase(MDSObject):
     cdef:
-        managed_record_handle _record_handle
+        h_mrecord_t _record_handle
 
     def read(self):
         pass
@@ -1884,15 +698,9 @@ cdef class MDSConstRecordFieldReferenceBase(MDSObject):
         pass
 
     def write(self, value):
-        self._throw_const_error()
-
-
-cdef class MDSRecordFieldReferenceBase(MDSConstRecordFieldReferenceBase):
-
-    def write(self, value):
         pass
 
-  # static value_type from_core(const core_api_type &val) {
+  # static value_type from_core(const core_type &val) {
   #   return mtype().from_core(val);
   # }
 
@@ -1903,892 +711,21 @@ cdef class MDSRecordFieldReferenceBase(MDSConstRecordFieldReferenceBase):
   # template<typename U = T, typename = std::enable_if_t<is_mds_array<U>::value>>
   # static value_type from_core(const api::managed_array_base_handle &handle) {
   #   using elt_type = typename mtype::elt_type;
-  #   core_api_type h(handle.pointer()->template downcast<elt_type::kind>(),
+  #   core_type h(handle.pointer()->template downcast<elt_type::kind>(),
   #                   handle.view());
   #   return from_core(h);
   # }
 
-  # static core_api_type to_core(const value_type &val) {
+  # static core_type to_core(const value_type &val) {
   #   return mtype().to_core(val);
   # }
 
 # START INJECTION | tmpl_record_field_reference_primitives(Primitives)
 
-
-cdef class MDSConstBoolRecordFieldReference(MDSConstRecordFieldReferenceBase):
-    cdef:
-        h_rfield_bool_t _field_handle
-        Record _record
-
-    def __cinit__(self, MDSBoolRecordField field, Record record):
-        self._record = record
-        self._field_handle = h_rfield_bool_t(field._handle)
-        self._record_handle = managed_record_handle(record._handle)
-
-    def read(self):
-        cdef bool retval = self._field_handle.frozen_read(self._record_handle)
-        return retval
-
-    def peek(self):
-        cdef bool retval = self._field_handle.free_read(self._record_handle)
-        return retval
-
-
-cdef class MDSBoolRecordFieldReference(MDSConstBoolRecordFieldReference):
-
-    def write(self, value):
-        self._field_handle.write(self._record_handle, <bool> (value))
-
-
-cdef class MDSConstByteRecordFieldReference(MDSConstRecordFieldReferenceBase):
-    cdef:
-        h_rfield_byte_t _field_handle
-        Record _record
-
-    def __cinit__(self, MDSByteRecordField field, Record record):
-        self._record = record
-        self._field_handle = h_rfield_byte_t(field._handle)
-        self._record_handle = managed_record_handle(record._handle)
-
-    def read(self):
-        cdef int8_t retval = self._field_handle.frozen_read(self._record_handle)
-        return retval
-
-    def peek(self):
-        cdef int8_t retval = self._field_handle.free_read(self._record_handle)
-        return retval
-
-
-cdef class MDSByteRecordFieldReference(MDSConstByteRecordFieldReference):
-
-    def write(self, value):
-        self._field_handle.write(self._record_handle, <int8_t> (value))
-
-
-    def __iadd__(self, other):
-        self._field_handle.add(self._record_handle, <int8_t> (other))
-
-    def __isub__(self, other):
-        self._field_handle.sub(self._record_handle, <int8_t> (other))
-
-    def __imul__(self, other):
-        self._field_handle.mul(self._record_handle, <int8_t> (other))
-
-    def __itruediv__(self, other):
-        self._field_handle.div(self._record_handle, <int8_t> (other))
-
-
-cdef class MDSConstUByteRecordFieldReference(MDSConstRecordFieldReferenceBase):
-    cdef:
-        h_rfield_ubyte_t _field_handle
-        Record _record
-
-    def __cinit__(self, MDSUByteRecordField field, Record record):
-        self._record = record
-        self._field_handle = h_rfield_ubyte_t(field._handle)
-        self._record_handle = managed_record_handle(record._handle)
-
-    def read(self):
-        cdef uint8_t retval = self._field_handle.frozen_read(self._record_handle)
-        return retval
-
-    def peek(self):
-        cdef uint8_t retval = self._field_handle.free_read(self._record_handle)
-        return retval
-
-
-cdef class MDSUByteRecordFieldReference(MDSConstUByteRecordFieldReference):
-
-    def write(self, value):
-        self._field_handle.write(self._record_handle, <uint8_t> (value))
-
-
-    def __iadd__(self, other):
-        self._field_handle.add(self._record_handle, <uint8_t> (other))
-
-    def __isub__(self, other):
-        self._field_handle.sub(self._record_handle, <uint8_t> (other))
-
-    def __imul__(self, other):
-        self._field_handle.mul(self._record_handle, <uint8_t> (other))
-
-    def __itruediv__(self, other):
-        self._field_handle.div(self._record_handle, <uint8_t> (other))
-
-
-cdef class MDSConstShortRecordFieldReference(MDSConstRecordFieldReferenceBase):
-    cdef:
-        h_rfield_short_t _field_handle
-        Record _record
-
-    def __cinit__(self, MDSShortRecordField field, Record record):
-        self._record = record
-        self._field_handle = h_rfield_short_t(field._handle)
-        self._record_handle = managed_record_handle(record._handle)
-
-    def read(self):
-        cdef int16_t retval = self._field_handle.frozen_read(self._record_handle)
-        return retval
-
-    def peek(self):
-        cdef int16_t retval = self._field_handle.free_read(self._record_handle)
-        return retval
-
-
-cdef class MDSShortRecordFieldReference(MDSConstShortRecordFieldReference):
-
-    def write(self, value):
-        self._field_handle.write(self._record_handle, <int16_t> (value))
-
-
-    def __iadd__(self, other):
-        self._field_handle.add(self._record_handle, <int16_t> (other))
-
-    def __isub__(self, other):
-        self._field_handle.sub(self._record_handle, <int16_t> (other))
-
-    def __imul__(self, other):
-        self._field_handle.mul(self._record_handle, <int16_t> (other))
-
-    def __itruediv__(self, other):
-        self._field_handle.div(self._record_handle, <int16_t> (other))
-
-
-cdef class MDSConstUShortRecordFieldReference(MDSConstRecordFieldReferenceBase):
-    cdef:
-        h_rfield_ushort_t _field_handle
-        Record _record
-
-    def __cinit__(self, MDSUShortRecordField field, Record record):
-        self._record = record
-        self._field_handle = h_rfield_ushort_t(field._handle)
-        self._record_handle = managed_record_handle(record._handle)
-
-    def read(self):
-        cdef uint16_t retval = self._field_handle.frozen_read(self._record_handle)
-        return retval
-
-    def peek(self):
-        cdef uint16_t retval = self._field_handle.free_read(self._record_handle)
-        return retval
-
-
-cdef class MDSUShortRecordFieldReference(MDSConstUShortRecordFieldReference):
-
-    def write(self, value):
-        self._field_handle.write(self._record_handle, <uint16_t> (value))
-
-
-    def __iadd__(self, other):
-        self._field_handle.add(self._record_handle, <uint16_t> (other))
-
-    def __isub__(self, other):
-        self._field_handle.sub(self._record_handle, <uint16_t> (other))
-
-    def __imul__(self, other):
-        self._field_handle.mul(self._record_handle, <uint16_t> (other))
-
-    def __itruediv__(self, other):
-        self._field_handle.div(self._record_handle, <uint16_t> (other))
-
-
-cdef class MDSConstIntRecordFieldReference(MDSConstRecordFieldReferenceBase):
-    cdef:
-        h_rfield_int_t _field_handle
-        Record _record
-
-    def __cinit__(self, MDSIntRecordField field, Record record):
-        self._record = record
-        self._field_handle = h_rfield_int_t(field._handle)
-        self._record_handle = managed_record_handle(record._handle)
-
-    def read(self):
-        cdef int32_t retval = self._field_handle.frozen_read(self._record_handle)
-        return retval
-
-    def peek(self):
-        cdef int32_t retval = self._field_handle.free_read(self._record_handle)
-        return retval
-
-
-cdef class MDSIntRecordFieldReference(MDSConstIntRecordFieldReference):
-
-    def write(self, value):
-        self._field_handle.write(self._record_handle, <int32_t> (value))
-
-
-    def __iadd__(self, other):
-        self._field_handle.add(self._record_handle, <int32_t> (other))
-
-    def __isub__(self, other):
-        self._field_handle.sub(self._record_handle, <int32_t> (other))
-
-    def __imul__(self, other):
-        self._field_handle.mul(self._record_handle, <int32_t> (other))
-
-    def __itruediv__(self, other):
-        self._field_handle.div(self._record_handle, <int32_t> (other))
-
-
-cdef class MDSConstUIntRecordFieldReference(MDSConstRecordFieldReferenceBase):
-    cdef:
-        h_rfield_uint_t _field_handle
-        Record _record
-
-    def __cinit__(self, MDSUIntRecordField field, Record record):
-        self._record = record
-        self._field_handle = h_rfield_uint_t(field._handle)
-        self._record_handle = managed_record_handle(record._handle)
-
-    def read(self):
-        cdef uint32_t retval = self._field_handle.frozen_read(self._record_handle)
-        return retval
-
-    def peek(self):
-        cdef uint32_t retval = self._field_handle.free_read(self._record_handle)
-        return retval
-
-
-cdef class MDSUIntRecordFieldReference(MDSConstUIntRecordFieldReference):
-
-    def write(self, value):
-        self._field_handle.write(self._record_handle, <uint32_t> (value))
-
-
-    def __iadd__(self, other):
-        self._field_handle.add(self._record_handle, <uint32_t> (other))
-
-    def __isub__(self, other):
-        self._field_handle.sub(self._record_handle, <uint32_t> (other))
-
-    def __imul__(self, other):
-        self._field_handle.mul(self._record_handle, <uint32_t> (other))
-
-    def __itruediv__(self, other):
-        self._field_handle.div(self._record_handle, <uint32_t> (other))
-
-
-cdef class MDSConstLongRecordFieldReference(MDSConstRecordFieldReferenceBase):
-    cdef:
-        h_rfield_long_t _field_handle
-        Record _record
-
-    def __cinit__(self, MDSLongRecordField field, Record record):
-        self._record = record
-        self._field_handle = h_rfield_long_t(field._handle)
-        self._record_handle = managed_record_handle(record._handle)
-
-    def read(self):
-        cdef int64_t retval = self._field_handle.frozen_read(self._record_handle)
-        return retval
-
-    def peek(self):
-        cdef int64_t retval = self._field_handle.free_read(self._record_handle)
-        return retval
-
-
-cdef class MDSLongRecordFieldReference(MDSConstLongRecordFieldReference):
-
-    def write(self, value):
-        self._field_handle.write(self._record_handle, <int64_t> (value))
-
-
-    def __iadd__(self, other):
-        self._field_handle.add(self._record_handle, <int64_t> (other))
-
-    def __isub__(self, other):
-        self._field_handle.sub(self._record_handle, <int64_t> (other))
-
-    def __imul__(self, other):
-        self._field_handle.mul(self._record_handle, <int64_t> (other))
-
-    def __itruediv__(self, other):
-        self._field_handle.div(self._record_handle, <int64_t> (other))
-
-
-cdef class MDSConstULongRecordFieldReference(MDSConstRecordFieldReferenceBase):
-    cdef:
-        h_rfield_ulong_t _field_handle
-        Record _record
-
-    def __cinit__(self, MDSULongRecordField field, Record record):
-        self._record = record
-        self._field_handle = h_rfield_ulong_t(field._handle)
-        self._record_handle = managed_record_handle(record._handle)
-
-    def read(self):
-        cdef uint64_t retval = self._field_handle.frozen_read(self._record_handle)
-        return retval
-
-    def peek(self):
-        cdef uint64_t retval = self._field_handle.free_read(self._record_handle)
-        return retval
-
-
-cdef class MDSULongRecordFieldReference(MDSConstULongRecordFieldReference):
-
-    def write(self, value):
-        self._field_handle.write(self._record_handle, <uint64_t> (value))
-
-
-    def __iadd__(self, other):
-        self._field_handle.add(self._record_handle, <uint64_t> (other))
-
-    def __isub__(self, other):
-        self._field_handle.sub(self._record_handle, <uint64_t> (other))
-
-    def __imul__(self, other):
-        self._field_handle.mul(self._record_handle, <uint64_t> (other))
-
-    def __itruediv__(self, other):
-        self._field_handle.div(self._record_handle, <uint64_t> (other))
-
-
-cdef class MDSConstFloatRecordFieldReference(MDSConstRecordFieldReferenceBase):
-    cdef:
-        h_rfield_float_t _field_handle
-        Record _record
-
-    def __cinit__(self, MDSFloatRecordField field, Record record):
-        self._record = record
-        self._field_handle = h_rfield_float_t(field._handle)
-        self._record_handle = managed_record_handle(record._handle)
-
-    def read(self):
-        cdef float retval = self._field_handle.frozen_read(self._record_handle)
-        return retval
-
-    def peek(self):
-        cdef float retval = self._field_handle.free_read(self._record_handle)
-        return retval
-
-
-cdef class MDSFloatRecordFieldReference(MDSConstFloatRecordFieldReference):
-
-    def write(self, value):
-        self._field_handle.write(self._record_handle, <float> (value))
-
-
-    def __iadd__(self, other):
-        self._field_handle.add(self._record_handle, <float> (other))
-
-    def __isub__(self, other):
-        self._field_handle.sub(self._record_handle, <float> (other))
-
-    def __imul__(self, other):
-        self._field_handle.mul(self._record_handle, <float> (other))
-
-    def __itruediv__(self, other):
-        self._field_handle.div(self._record_handle, <float> (other))
-
-
-cdef class MDSConstDoubleRecordFieldReference(MDSConstRecordFieldReferenceBase):
-    cdef:
-        h_rfield_double_t _field_handle
-        Record _record
-
-    def __cinit__(self, MDSDoubleRecordField field, Record record):
-        self._record = record
-        self._field_handle = h_rfield_double_t(field._handle)
-        self._record_handle = managed_record_handle(record._handle)
-
-    def read(self):
-        cdef double retval = self._field_handle.frozen_read(self._record_handle)
-        return retval
-
-    def peek(self):
-        cdef double retval = self._field_handle.free_read(self._record_handle)
-        return retval
-
-
-cdef class MDSDoubleRecordFieldReference(MDSConstDoubleRecordFieldReference):
-
-    def write(self, value):
-        self._field_handle.write(self._record_handle, <double> (value))
-
-
-    def __iadd__(self, other):
-        self._field_handle.add(self._record_handle, <double> (other))
-
-    def __isub__(self, other):
-        self._field_handle.sub(self._record_handle, <double> (other))
-
-    def __imul__(self, other):
-        self._field_handle.mul(self._record_handle, <double> (other))
-
-    def __itruediv__(self, other):
-        self._field_handle.div(self._record_handle, <double> (other))
 # END INJECTION
 
 # START INJECTION | tmpl_record_field_reference_arrays(Arrays)
 
-
-cdef class MDSConstBoolArrayRecordFieldReference(MDSConstRecordFieldReferenceBase):
-    cdef:
-        h_rfield_array_bool_t _field_handle
-        Record _record
-
-    def __cinit__(self, MDSBoolArrayRecordField field, Record record):
-        self._record = record
-        self._field_handle = h_rfield_array_bool_t(field._handle)
-        self._record_handle = managed_record_handle(record._handle)
-
-    def read(self):
-        cdef:
-            h_marray_base_t mbah = self._field_handle.frozen_read(self._record_handle)
-            h_marray_bool_t handle = downcast_marray_bool(mbah)
-            BoolArray retval = BoolArray()
-
-        retval._handle = handle
-        return retval
-
-    def peek(self):
-        cdef:
-            h_marray_base_t mbah = self._field_handle.free_read(self._record_handle)
-            h_marray_bool_t handle = downcast_marray_bool(mbah)
-            BoolArray retval = BoolArray()
-
-        retval._handle = handle
-        return retval
-
-
-cdef class MDSBoolArrayRecordFieldReference(MDSConstBoolArrayRecordFieldReference):
-
-    def write(self, BoolArray value):
-        cdef h_marray_bool_t handle = value._handle
-        self._field_handle.write(self._record_handle, handle)
-
-
-cdef class MDSConstByteArrayRecordFieldReference(MDSConstRecordFieldReferenceBase):
-    cdef:
-        h_rfield_array_byte_t _field_handle
-        Record _record
-
-    def __cinit__(self, MDSByteArrayRecordField field, Record record):
-        self._record = record
-        self._field_handle = h_rfield_array_byte_t(field._handle)
-        self._record_handle = managed_record_handle(record._handle)
-
-    def read(self):
-        cdef:
-            h_marray_base_t mbah = self._field_handle.frozen_read(self._record_handle)
-            h_marray_byte_t handle = downcast_marray_byte(mbah)
-            ByteArray retval = ByteArray()
-
-        retval._handle = handle
-        return retval
-
-    def peek(self):
-        cdef:
-            h_marray_base_t mbah = self._field_handle.free_read(self._record_handle)
-            h_marray_byte_t handle = downcast_marray_byte(mbah)
-            ByteArray retval = ByteArray()
-
-        retval._handle = handle
-        return retval
-
-
-cdef class MDSByteArrayRecordFieldReference(MDSConstByteArrayRecordFieldReference):
-
-    def write(self, ByteArray value):
-        cdef h_marray_byte_t handle = value._handle
-        self._field_handle.write(self._record_handle, handle)
-
-
-cdef class MDSConstUByteArrayRecordFieldReference(MDSConstRecordFieldReferenceBase):
-    cdef:
-        h_rfield_array_ubyte_t _field_handle
-        Record _record
-
-    def __cinit__(self, MDSUByteArrayRecordField field, Record record):
-        self._record = record
-        self._field_handle = h_rfield_array_ubyte_t(field._handle)
-        self._record_handle = managed_record_handle(record._handle)
-
-    def read(self):
-        cdef:
-            h_marray_base_t mbah = self._field_handle.frozen_read(self._record_handle)
-            h_marray_ubyte_t handle = downcast_marray_ubyte(mbah)
-            UByteArray retval = UByteArray()
-
-        retval._handle = handle
-        return retval
-
-    def peek(self):
-        cdef:
-            h_marray_base_t mbah = self._field_handle.free_read(self._record_handle)
-            h_marray_ubyte_t handle = downcast_marray_ubyte(mbah)
-            UByteArray retval = UByteArray()
-
-        retval._handle = handle
-        return retval
-
-
-cdef class MDSUByteArrayRecordFieldReference(MDSConstUByteArrayRecordFieldReference):
-
-    def write(self, UByteArray value):
-        cdef h_marray_ubyte_t handle = value._handle
-        self._field_handle.write(self._record_handle, handle)
-
-
-cdef class MDSConstShortArrayRecordFieldReference(MDSConstRecordFieldReferenceBase):
-    cdef:
-        h_rfield_array_short_t _field_handle
-        Record _record
-
-    def __cinit__(self, MDSShortArrayRecordField field, Record record):
-        self._record = record
-        self._field_handle = h_rfield_array_short_t(field._handle)
-        self._record_handle = managed_record_handle(record._handle)
-
-    def read(self):
-        cdef:
-            h_marray_base_t mbah = self._field_handle.frozen_read(self._record_handle)
-            h_marray_short_t handle = downcast_marray_short(mbah)
-            ShortArray retval = ShortArray()
-
-        retval._handle = handle
-        return retval
-
-    def peek(self):
-        cdef:
-            h_marray_base_t mbah = self._field_handle.free_read(self._record_handle)
-            h_marray_short_t handle = downcast_marray_short(mbah)
-            ShortArray retval = ShortArray()
-
-        retval._handle = handle
-        return retval
-
-
-cdef class MDSShortArrayRecordFieldReference(MDSConstShortArrayRecordFieldReference):
-
-    def write(self, ShortArray value):
-        cdef h_marray_short_t handle = value._handle
-        self._field_handle.write(self._record_handle, handle)
-
-
-cdef class MDSConstUShortArrayRecordFieldReference(MDSConstRecordFieldReferenceBase):
-    cdef:
-        h_rfield_array_ushort_t _field_handle
-        Record _record
-
-    def __cinit__(self, MDSUShortArrayRecordField field, Record record):
-        self._record = record
-        self._field_handle = h_rfield_array_ushort_t(field._handle)
-        self._record_handle = managed_record_handle(record._handle)
-
-    def read(self):
-        cdef:
-            h_marray_base_t mbah = self._field_handle.frozen_read(self._record_handle)
-            h_marray_ushort_t handle = downcast_marray_ushort(mbah)
-            UShortArray retval = UShortArray()
-
-        retval._handle = handle
-        return retval
-
-    def peek(self):
-        cdef:
-            h_marray_base_t mbah = self._field_handle.free_read(self._record_handle)
-            h_marray_ushort_t handle = downcast_marray_ushort(mbah)
-            UShortArray retval = UShortArray()
-
-        retval._handle = handle
-        return retval
-
-
-cdef class MDSUShortArrayRecordFieldReference(MDSConstUShortArrayRecordFieldReference):
-
-    def write(self, UShortArray value):
-        cdef h_marray_ushort_t handle = value._handle
-        self._field_handle.write(self._record_handle, handle)
-
-
-cdef class MDSConstIntArrayRecordFieldReference(MDSConstRecordFieldReferenceBase):
-    cdef:
-        h_rfield_array_int_t _field_handle
-        Record _record
-
-    def __cinit__(self, MDSIntArrayRecordField field, Record record):
-        self._record = record
-        self._field_handle = h_rfield_array_int_t(field._handle)
-        self._record_handle = managed_record_handle(record._handle)
-
-    def read(self):
-        cdef:
-            h_marray_base_t mbah = self._field_handle.frozen_read(self._record_handle)
-            h_marray_int_t handle = downcast_marray_int(mbah)
-            IntArray retval = IntArray()
-
-        retval._handle = handle
-        return retval
-
-    def peek(self):
-        cdef:
-            h_marray_base_t mbah = self._field_handle.free_read(self._record_handle)
-            h_marray_int_t handle = downcast_marray_int(mbah)
-            IntArray retval = IntArray()
-
-        retval._handle = handle
-        return retval
-
-
-cdef class MDSIntArrayRecordFieldReference(MDSConstIntArrayRecordFieldReference):
-
-    def write(self, IntArray value):
-        cdef h_marray_int_t handle = value._handle
-        self._field_handle.write(self._record_handle, handle)
-
-
-cdef class MDSConstUIntArrayRecordFieldReference(MDSConstRecordFieldReferenceBase):
-    cdef:
-        h_rfield_array_uint_t _field_handle
-        Record _record
-
-    def __cinit__(self, MDSUIntArrayRecordField field, Record record):
-        self._record = record
-        self._field_handle = h_rfield_array_uint_t(field._handle)
-        self._record_handle = managed_record_handle(record._handle)
-
-    def read(self):
-        cdef:
-            h_marray_base_t mbah = self._field_handle.frozen_read(self._record_handle)
-            h_marray_uint_t handle = downcast_marray_uint(mbah)
-            UIntArray retval = UIntArray()
-
-        retval._handle = handle
-        return retval
-
-    def peek(self):
-        cdef:
-            h_marray_base_t mbah = self._field_handle.free_read(self._record_handle)
-            h_marray_uint_t handle = downcast_marray_uint(mbah)
-            UIntArray retval = UIntArray()
-
-        retval._handle = handle
-        return retval
-
-
-cdef class MDSUIntArrayRecordFieldReference(MDSConstUIntArrayRecordFieldReference):
-
-    def write(self, UIntArray value):
-        cdef h_marray_uint_t handle = value._handle
-        self._field_handle.write(self._record_handle, handle)
-
-
-cdef class MDSConstLongArrayRecordFieldReference(MDSConstRecordFieldReferenceBase):
-    cdef:
-        h_rfield_array_long_t _field_handle
-        Record _record
-
-    def __cinit__(self, MDSLongArrayRecordField field, Record record):
-        self._record = record
-        self._field_handle = h_rfield_array_long_t(field._handle)
-        self._record_handle = managed_record_handle(record._handle)
-
-    def read(self):
-        cdef:
-            h_marray_base_t mbah = self._field_handle.frozen_read(self._record_handle)
-            h_marray_long_t handle = downcast_marray_long(mbah)
-            LongArray retval = LongArray()
-
-        retval._handle = handle
-        return retval
-
-    def peek(self):
-        cdef:
-            h_marray_base_t mbah = self._field_handle.free_read(self._record_handle)
-            h_marray_long_t handle = downcast_marray_long(mbah)
-            LongArray retval = LongArray()
-
-        retval._handle = handle
-        return retval
-
-
-cdef class MDSLongArrayRecordFieldReference(MDSConstLongArrayRecordFieldReference):
-
-    def write(self, LongArray value):
-        cdef h_marray_long_t handle = value._handle
-        self._field_handle.write(self._record_handle, handle)
-
-
-cdef class MDSConstULongArrayRecordFieldReference(MDSConstRecordFieldReferenceBase):
-    cdef:
-        h_rfield_array_ulong_t _field_handle
-        Record _record
-
-    def __cinit__(self, MDSULongArrayRecordField field, Record record):
-        self._record = record
-        self._field_handle = h_rfield_array_ulong_t(field._handle)
-        self._record_handle = managed_record_handle(record._handle)
-
-    def read(self):
-        cdef:
-            h_marray_base_t mbah = self._field_handle.frozen_read(self._record_handle)
-            h_marray_ulong_t handle = downcast_marray_ulong(mbah)
-            ULongArray retval = ULongArray()
-
-        retval._handle = handle
-        return retval
-
-    def peek(self):
-        cdef:
-            h_marray_base_t mbah = self._field_handle.free_read(self._record_handle)
-            h_marray_ulong_t handle = downcast_marray_ulong(mbah)
-            ULongArray retval = ULongArray()
-
-        retval._handle = handle
-        return retval
-
-
-cdef class MDSULongArrayRecordFieldReference(MDSConstULongArrayRecordFieldReference):
-
-    def write(self, ULongArray value):
-        cdef h_marray_ulong_t handle = value._handle
-        self._field_handle.write(self._record_handle, handle)
-
-
-cdef class MDSConstFloatArrayRecordFieldReference(MDSConstRecordFieldReferenceBase):
-    cdef:
-        h_rfield_array_float_t _field_handle
-        Record _record
-
-    def __cinit__(self, MDSFloatArrayRecordField field, Record record):
-        self._record = record
-        self._field_handle = h_rfield_array_float_t(field._handle)
-        self._record_handle = managed_record_handle(record._handle)
-
-    def read(self):
-        cdef:
-            h_marray_base_t mbah = self._field_handle.frozen_read(self._record_handle)
-            h_marray_float_t handle = downcast_marray_float(mbah)
-            FloatArray retval = FloatArray()
-
-        retval._handle = handle
-        return retval
-
-    def peek(self):
-        cdef:
-            h_marray_base_t mbah = self._field_handle.free_read(self._record_handle)
-            h_marray_float_t handle = downcast_marray_float(mbah)
-            FloatArray retval = FloatArray()
-
-        retval._handle = handle
-        return retval
-
-
-cdef class MDSFloatArrayRecordFieldReference(MDSConstFloatArrayRecordFieldReference):
-
-    def write(self, FloatArray value):
-        cdef h_marray_float_t handle = value._handle
-        self._field_handle.write(self._record_handle, handle)
-
-
-cdef class MDSConstDoubleArrayRecordFieldReference(MDSConstRecordFieldReferenceBase):
-    cdef:
-        h_rfield_array_double_t _field_handle
-        Record _record
-
-    def __cinit__(self, MDSDoubleArrayRecordField field, Record record):
-        self._record = record
-        self._field_handle = h_rfield_array_double_t(field._handle)
-        self._record_handle = managed_record_handle(record._handle)
-
-    def read(self):
-        cdef:
-            h_marray_base_t mbah = self._field_handle.frozen_read(self._record_handle)
-            h_marray_double_t handle = downcast_marray_double(mbah)
-            DoubleArray retval = DoubleArray()
-
-        retval._handle = handle
-        return retval
-
-    def peek(self):
-        cdef:
-            h_marray_base_t mbah = self._field_handle.free_read(self._record_handle)
-            h_marray_double_t handle = downcast_marray_double(mbah)
-            DoubleArray retval = DoubleArray()
-
-        retval._handle = handle
-        return retval
-
-
-cdef class MDSDoubleArrayRecordFieldReference(MDSConstDoubleArrayRecordFieldReference):
-
-    def write(self, DoubleArray value):
-        cdef h_marray_double_t handle = value._handle
-        self._field_handle.write(self._record_handle, handle)
-
-
-cdef class MDSConstStringArrayRecordFieldReference(MDSConstRecordFieldReferenceBase):
-    cdef:
-        h_rfield_array_string_t _field_handle
-        Record _record
-
-    def __cinit__(self, MDSStringArrayRecordField field, Record record):
-        self._record = record
-        self._field_handle = h_rfield_array_string_t(field._handle)
-        self._record_handle = managed_record_handle(record._handle)
-
-    def read(self):
-        cdef:
-            h_marray_base_t mbah = self._field_handle.frozen_read(self._record_handle)
-            h_marray_string_t handle = downcast_marray_string(mbah)
-            StringArray retval = StringArray()
-
-        retval._handle = handle
-        return retval
-
-    def peek(self):
-        cdef:
-            h_marray_base_t mbah = self._field_handle.free_read(self._record_handle)
-            h_marray_string_t handle = downcast_marray_string(mbah)
-            StringArray retval = StringArray()
-
-        retval._handle = handle
-        return retval
-
-
-cdef class MDSStringArrayRecordFieldReference(MDSConstStringArrayRecordFieldReference):
-
-    def write(self, StringArray value):
-        cdef h_marray_string_t handle = value._handle
-        self._field_handle.write(self._record_handle, handle)
-
-
-cdef class MDSConstRecordArrayRecordFieldReference(MDSConstRecordFieldReferenceBase):
-    cdef:
-        h_rfield_array_record_t _field_handle
-        Record _record
-
-    def __cinit__(self, MDSRecordArrayRecordField field, Record record):
-        self._record = record
-        self._field_handle = h_rfield_array_record_t(field._handle)
-        self._record_handle = managed_record_handle(record._handle)
-
-    def read(self):
-        cdef:
-            h_marray_base_t mbah = self._field_handle.frozen_read(self._record_handle)
-            h_marray_record_t handle = downcast_marray_record(mbah)
-            RecordArray retval = RecordArray()
-
-        retval._handle = handle
-        return retval
-
-    def peek(self):
-        cdef:
-            h_marray_base_t mbah = self._field_handle.free_read(self._record_handle)
-            h_marray_record_t handle = downcast_marray_record(mbah)
-            RecordArray retval = RecordArray()
-
-        retval._handle = handle
-        return retval
-
-
-cdef class MDSRecordArrayRecordFieldReference(MDSConstRecordArrayRecordFieldReference):
-
-    def write(self, RecordArray value):
-        cdef h_marray_record_t handle = value._handle
-        self._field_handle.write(self._record_handle, handle)
 # END INJECTION
 
 ############################################################# RECORD MEMBERS
@@ -2805,7 +742,7 @@ cdef class MDSRecordMemberBase(MDSObject):
         if initial_value is not None:
             self.write(initial_value)
 
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
+    def _field_ref(self) -> MDSRecordFieldReferenceBase:
         """
         Confusingly, in the MDS hierarchy, const_reference is the parent of
         reference, so the return type of this function may look to restrictive.
@@ -2829,864 +766,12 @@ cdef class MDSRecordMemberBase(MDSObject):
             return self._enclosing
 
 
-cdef class MDSConstRecordMemberBase(MDSRecordMemberBase):
-    cdef:
-        bint _is_cached
-
-    def __cinit__(self, Record record, initial_value=None):
-        """
-        Delegate record upwards, but deal with `initial_value` here,
-        as we only want to write at instantiation. @TODO
-        """
-        super().__init__(record=record, initial_value=None)
-
-        if initial_value is not None:
-            pass # TODO: Do something
-
-    def write(self, value):
-        self._throw_const_error()
-
-
 # START INJECTION | tmpl_record_member_primitives(Primitives)
 
-cdef class MDSConstBoolRecordMember(MDSConstRecordMemberBase):
-
-    cdef bool _cached_val
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSBoolRecordField()[self]
-
-    def read(self):
-        if not self._is_cached:
-            field_ref = self._field_ref()
-            self._cached_val = field_ref.read()
-            self._is_cached = True
-
-        return self._cached_val
-
-cdef class MDSBoolRecordMember(MDSRecordMemberBase):
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSBoolRecordField()[self]
-
-    def read(self):
-        return self._field_ref().read()
-
-    def write(self, value) -> None:
-        self._field_ref().write(<bool> value);
-
-cdef class MDSConstByteRecordMember(MDSConstRecordMemberBase):
-
-    cdef int8_t _cached_val
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSByteRecordField()[self]
-
-    def read(self):
-        if not self._is_cached:
-            field_ref = self._field_ref()
-            self._cached_val = field_ref.read()
-            self._is_cached = True
-
-        return self._cached_val
-
-cdef class MDSByteRecordMember(MDSRecordMemberBase):
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSByteRecordField()[self]
-
-    def read(self):
-        return self._field_ref().read()
-
-    def write(self, value) -> None:
-        self._field_ref().write(<int8_t> value);
-
-    def __iadd__(self, other):
-        ref = self._field_ref()
-        ref += other
-
-    def __isub__(self, other):
-        ref = self._field_ref()
-        ref -= other
-
-    def __imul__(self, other):
-        ref = self._field_ref()
-        ref *= other
-
-    def __itruediv__(self, other):
-        ref = self._field_ref()
-        ref /= other
-
-cdef class MDSConstUByteRecordMember(MDSConstRecordMemberBase):
-
-    cdef uint8_t _cached_val
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSUByteRecordField()[self]
-
-    def read(self):
-        if not self._is_cached:
-            field_ref = self._field_ref()
-            self._cached_val = field_ref.read()
-            self._is_cached = True
-
-        return self._cached_val
-
-cdef class MDSUByteRecordMember(MDSRecordMemberBase):
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSUByteRecordField()[self]
-
-    def read(self):
-        return self._field_ref().read()
-
-    def write(self, value) -> None:
-        self._field_ref().write(<uint8_t> value);
-
-    def __iadd__(self, other):
-        ref = self._field_ref()
-        ref += other
-
-    def __isub__(self, other):
-        ref = self._field_ref()
-        ref -= other
-
-    def __imul__(self, other):
-        ref = self._field_ref()
-        ref *= other
-
-    def __itruediv__(self, other):
-        ref = self._field_ref()
-        ref /= other
-
-cdef class MDSConstShortRecordMember(MDSConstRecordMemberBase):
-
-    cdef int16_t _cached_val
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSShortRecordField()[self]
-
-    def read(self):
-        if not self._is_cached:
-            field_ref = self._field_ref()
-            self._cached_val = field_ref.read()
-            self._is_cached = True
-
-        return self._cached_val
-
-cdef class MDSShortRecordMember(MDSRecordMemberBase):
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSShortRecordField()[self]
-
-    def read(self):
-        return self._field_ref().read()
-
-    def write(self, value) -> None:
-        self._field_ref().write(<int16_t> value);
-
-    def __iadd__(self, other):
-        ref = self._field_ref()
-        ref += other
-
-    def __isub__(self, other):
-        ref = self._field_ref()
-        ref -= other
-
-    def __imul__(self, other):
-        ref = self._field_ref()
-        ref *= other
-
-    def __itruediv__(self, other):
-        ref = self._field_ref()
-        ref /= other
-
-cdef class MDSConstUShortRecordMember(MDSConstRecordMemberBase):
-
-    cdef uint16_t _cached_val
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSUShortRecordField()[self]
-
-    def read(self):
-        if not self._is_cached:
-            field_ref = self._field_ref()
-            self._cached_val = field_ref.read()
-            self._is_cached = True
-
-        return self._cached_val
-
-cdef class MDSUShortRecordMember(MDSRecordMemberBase):
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSUShortRecordField()[self]
-
-    def read(self):
-        return self._field_ref().read()
-
-    def write(self, value) -> None:
-        self._field_ref().write(<uint16_t> value);
-
-    def __iadd__(self, other):
-        ref = self._field_ref()
-        ref += other
-
-    def __isub__(self, other):
-        ref = self._field_ref()
-        ref -= other
-
-    def __imul__(self, other):
-        ref = self._field_ref()
-        ref *= other
-
-    def __itruediv__(self, other):
-        ref = self._field_ref()
-        ref /= other
-
-cdef class MDSConstIntRecordMember(MDSConstRecordMemberBase):
-
-    cdef int32_t _cached_val
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSIntRecordField()[self]
-
-    def read(self):
-        if not self._is_cached:
-            field_ref = self._field_ref()
-            self._cached_val = field_ref.read()
-            self._is_cached = True
-
-        return self._cached_val
-
-cdef class MDSIntRecordMember(MDSRecordMemberBase):
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSIntRecordField()[self]
-
-    def read(self):
-        return self._field_ref().read()
-
-    def write(self, value) -> None:
-        self._field_ref().write(<int32_t> value);
-
-    def __iadd__(self, other):
-        ref = self._field_ref()
-        ref += other
-
-    def __isub__(self, other):
-        ref = self._field_ref()
-        ref -= other
-
-    def __imul__(self, other):
-        ref = self._field_ref()
-        ref *= other
-
-    def __itruediv__(self, other):
-        ref = self._field_ref()
-        ref /= other
-
-cdef class MDSConstUIntRecordMember(MDSConstRecordMemberBase):
-
-    cdef uint32_t _cached_val
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSUIntRecordField()[self]
-
-    def read(self):
-        if not self._is_cached:
-            field_ref = self._field_ref()
-            self._cached_val = field_ref.read()
-            self._is_cached = True
-
-        return self._cached_val
-
-cdef class MDSUIntRecordMember(MDSRecordMemberBase):
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSUIntRecordField()[self]
-
-    def read(self):
-        return self._field_ref().read()
-
-    def write(self, value) -> None:
-        self._field_ref().write(<uint32_t> value);
-
-    def __iadd__(self, other):
-        ref = self._field_ref()
-        ref += other
-
-    def __isub__(self, other):
-        ref = self._field_ref()
-        ref -= other
-
-    def __imul__(self, other):
-        ref = self._field_ref()
-        ref *= other
-
-    def __itruediv__(self, other):
-        ref = self._field_ref()
-        ref /= other
-
-cdef class MDSConstLongRecordMember(MDSConstRecordMemberBase):
-
-    cdef int64_t _cached_val
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSLongRecordField()[self]
-
-    def read(self):
-        if not self._is_cached:
-            field_ref = self._field_ref()
-            self._cached_val = field_ref.read()
-            self._is_cached = True
-
-        return self._cached_val
-
-cdef class MDSLongRecordMember(MDSRecordMemberBase):
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSLongRecordField()[self]
-
-    def read(self):
-        return self._field_ref().read()
-
-    def write(self, value) -> None:
-        self._field_ref().write(<int64_t> value);
-
-    def __iadd__(self, other):
-        ref = self._field_ref()
-        ref += other
-
-    def __isub__(self, other):
-        ref = self._field_ref()
-        ref -= other
-
-    def __imul__(self, other):
-        ref = self._field_ref()
-        ref *= other
-
-    def __itruediv__(self, other):
-        ref = self._field_ref()
-        ref /= other
-
-cdef class MDSConstULongRecordMember(MDSConstRecordMemberBase):
-
-    cdef uint64_t _cached_val
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSULongRecordField()[self]
-
-    def read(self):
-        if not self._is_cached:
-            field_ref = self._field_ref()
-            self._cached_val = field_ref.read()
-            self._is_cached = True
-
-        return self._cached_val
-
-cdef class MDSULongRecordMember(MDSRecordMemberBase):
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSULongRecordField()[self]
-
-    def read(self):
-        return self._field_ref().read()
-
-    def write(self, value) -> None:
-        self._field_ref().write(<uint64_t> value);
-
-    def __iadd__(self, other):
-        ref = self._field_ref()
-        ref += other
-
-    def __isub__(self, other):
-        ref = self._field_ref()
-        ref -= other
-
-    def __imul__(self, other):
-        ref = self._field_ref()
-        ref *= other
-
-    def __itruediv__(self, other):
-        ref = self._field_ref()
-        ref /= other
-
-cdef class MDSConstFloatRecordMember(MDSConstRecordMemberBase):
-
-    cdef float _cached_val
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSFloatRecordField()[self]
-
-    def read(self):
-        if not self._is_cached:
-            field_ref = self._field_ref()
-            self._cached_val = field_ref.read()
-            self._is_cached = True
-
-        return self._cached_val
-
-cdef class MDSFloatRecordMember(MDSRecordMemberBase):
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSFloatRecordField()[self]
-
-    def read(self):
-        return self._field_ref().read()
-
-    def write(self, value) -> None:
-        self._field_ref().write(<float> value);
-
-    def __iadd__(self, other):
-        ref = self._field_ref()
-        ref += other
-
-    def __isub__(self, other):
-        ref = self._field_ref()
-        ref -= other
-
-    def __imul__(self, other):
-        ref = self._field_ref()
-        ref *= other
-
-    def __itruediv__(self, other):
-        ref = self._field_ref()
-        ref /= other
-
-cdef class MDSConstDoubleRecordMember(MDSConstRecordMemberBase):
-
-    cdef double _cached_val
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSDoubleRecordField()[self]
-
-    def read(self):
-        if not self._is_cached:
-            field_ref = self._field_ref()
-            self._cached_val = field_ref.read()
-            self._is_cached = True
-
-        return self._cached_val
-
-cdef class MDSDoubleRecordMember(MDSRecordMemberBase):
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSDoubleRecordField()[self]
-
-    def read(self):
-        return self._field_ref().read()
-
-    def write(self, value) -> None:
-        self._field_ref().write(<double> value);
-
-    def __iadd__(self, other):
-        ref = self._field_ref()
-        ref += other
-
-    def __isub__(self, other):
-        ref = self._field_ref()
-        ref -= other
-
-    def __imul__(self, other):
-        ref = self._field_ref()
-        ref *= other
-
-    def __itruediv__(self, other):
-        ref = self._field_ref()
-        ref /= other
 # END INJECTION
 
 # START INJECTION | tmpl_record_member_arrays(Arrays)
 
-cdef class MDSConstBoolArrayRecordMember(MDSConstRecordMemberBase):
-    cdef BoolArray _cached_val
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSBoolArrayRecordField()[self]
-
-    def read(self) -> BoolArray:
-        cdef h_rfield_array_bool_t handle
-
-        if not self._is_cached:
-            field_ref = self._field_ref()
-            self._cached_val = field_ref.read()
-            self._is_cached = True
-
-        return self._cached_value
-
-cdef class MDSBoolArrayRecordMember(MDSRecordMemberBase):
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSBoolArrayRecordField()[self]
-
-    def read(self):
-        return self._field_ref().read()
-
-    def peek(self):
-        return self._field_ref().peek()
-
-    def write(self, value) -> None:
-        self._field_ref().write(value);
-
-cdef class MDSConstByteArrayRecordMember(MDSConstRecordMemberBase):
-    cdef ByteArray _cached_val
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSByteArrayRecordField()[self]
-
-    def read(self) -> ByteArray:
-        cdef h_rfield_array_byte_t handle
-
-        if not self._is_cached:
-            field_ref = self._field_ref()
-            self._cached_val = field_ref.read()
-            self._is_cached = True
-
-        return self._cached_value
-
-cdef class MDSByteArrayRecordMember(MDSRecordMemberBase):
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSByteArrayRecordField()[self]
-
-    def read(self):
-        return self._field_ref().read()
-
-    def peek(self):
-        return self._field_ref().peek()
-
-    def write(self, value) -> None:
-        self._field_ref().write(value);
-
-cdef class MDSConstUByteArrayRecordMember(MDSConstRecordMemberBase):
-    cdef UByteArray _cached_val
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSUByteArrayRecordField()[self]
-
-    def read(self) -> UByteArray:
-        cdef h_rfield_array_ubyte_t handle
-
-        if not self._is_cached:
-            field_ref = self._field_ref()
-            self._cached_val = field_ref.read()
-            self._is_cached = True
-
-        return self._cached_value
-
-cdef class MDSUByteArrayRecordMember(MDSRecordMemberBase):
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSUByteArrayRecordField()[self]
-
-    def read(self):
-        return self._field_ref().read()
-
-    def peek(self):
-        return self._field_ref().peek()
-
-    def write(self, value) -> None:
-        self._field_ref().write(value);
-
-cdef class MDSConstShortArrayRecordMember(MDSConstRecordMemberBase):
-    cdef ShortArray _cached_val
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSShortArrayRecordField()[self]
-
-    def read(self) -> ShortArray:
-        cdef h_rfield_array_short_t handle
-
-        if not self._is_cached:
-            field_ref = self._field_ref()
-            self._cached_val = field_ref.read()
-            self._is_cached = True
-
-        return self._cached_value
-
-cdef class MDSShortArrayRecordMember(MDSRecordMemberBase):
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSShortArrayRecordField()[self]
-
-    def read(self):
-        return self._field_ref().read()
-
-    def peek(self):
-        return self._field_ref().peek()
-
-    def write(self, value) -> None:
-        self._field_ref().write(value);
-
-cdef class MDSConstUShortArrayRecordMember(MDSConstRecordMemberBase):
-    cdef UShortArray _cached_val
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSUShortArrayRecordField()[self]
-
-    def read(self) -> UShortArray:
-        cdef h_rfield_array_ushort_t handle
-
-        if not self._is_cached:
-            field_ref = self._field_ref()
-            self._cached_val = field_ref.read()
-            self._is_cached = True
-
-        return self._cached_value
-
-cdef class MDSUShortArrayRecordMember(MDSRecordMemberBase):
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSUShortArrayRecordField()[self]
-
-    def read(self):
-        return self._field_ref().read()
-
-    def peek(self):
-        return self._field_ref().peek()
-
-    def write(self, value) -> None:
-        self._field_ref().write(value);
-
-cdef class MDSConstIntArrayRecordMember(MDSConstRecordMemberBase):
-    cdef IntArray _cached_val
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSIntArrayRecordField()[self]
-
-    def read(self) -> IntArray:
-        cdef h_rfield_array_int_t handle
-
-        if not self._is_cached:
-            field_ref = self._field_ref()
-            self._cached_val = field_ref.read()
-            self._is_cached = True
-
-        return self._cached_value
-
-cdef class MDSIntArrayRecordMember(MDSRecordMemberBase):
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSIntArrayRecordField()[self]
-
-    def read(self):
-        return self._field_ref().read()
-
-    def peek(self):
-        return self._field_ref().peek()
-
-    def write(self, value) -> None:
-        self._field_ref().write(value);
-
-cdef class MDSConstUIntArrayRecordMember(MDSConstRecordMemberBase):
-    cdef UIntArray _cached_val
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSUIntArrayRecordField()[self]
-
-    def read(self) -> UIntArray:
-        cdef h_rfield_array_uint_t handle
-
-        if not self._is_cached:
-            field_ref = self._field_ref()
-            self._cached_val = field_ref.read()
-            self._is_cached = True
-
-        return self._cached_value
-
-cdef class MDSUIntArrayRecordMember(MDSRecordMemberBase):
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSUIntArrayRecordField()[self]
-
-    def read(self):
-        return self._field_ref().read()
-
-    def peek(self):
-        return self._field_ref().peek()
-
-    def write(self, value) -> None:
-        self._field_ref().write(value);
-
-cdef class MDSConstLongArrayRecordMember(MDSConstRecordMemberBase):
-    cdef LongArray _cached_val
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSLongArrayRecordField()[self]
-
-    def read(self) -> LongArray:
-        cdef h_rfield_array_long_t handle
-
-        if not self._is_cached:
-            field_ref = self._field_ref()
-            self._cached_val = field_ref.read()
-            self._is_cached = True
-
-        return self._cached_value
-
-cdef class MDSLongArrayRecordMember(MDSRecordMemberBase):
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSLongArrayRecordField()[self]
-
-    def read(self):
-        return self._field_ref().read()
-
-    def peek(self):
-        return self._field_ref().peek()
-
-    def write(self, value) -> None:
-        self._field_ref().write(value);
-
-cdef class MDSConstULongArrayRecordMember(MDSConstRecordMemberBase):
-    cdef ULongArray _cached_val
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSULongArrayRecordField()[self]
-
-    def read(self) -> ULongArray:
-        cdef h_rfield_array_ulong_t handle
-
-        if not self._is_cached:
-            field_ref = self._field_ref()
-            self._cached_val = field_ref.read()
-            self._is_cached = True
-
-        return self._cached_value
-
-cdef class MDSULongArrayRecordMember(MDSRecordMemberBase):
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSULongArrayRecordField()[self]
-
-    def read(self):
-        return self._field_ref().read()
-
-    def peek(self):
-        return self._field_ref().peek()
-
-    def write(self, value) -> None:
-        self._field_ref().write(value);
-
-cdef class MDSConstFloatArrayRecordMember(MDSConstRecordMemberBase):
-    cdef FloatArray _cached_val
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSFloatArrayRecordField()[self]
-
-    def read(self) -> FloatArray:
-        cdef h_rfield_array_float_t handle
-
-        if not self._is_cached:
-            field_ref = self._field_ref()
-            self._cached_val = field_ref.read()
-            self._is_cached = True
-
-        return self._cached_value
-
-cdef class MDSFloatArrayRecordMember(MDSRecordMemberBase):
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSFloatArrayRecordField()[self]
-
-    def read(self):
-        return self._field_ref().read()
-
-    def peek(self):
-        return self._field_ref().peek()
-
-    def write(self, value) -> None:
-        self._field_ref().write(value);
-
-cdef class MDSConstDoubleArrayRecordMember(MDSConstRecordMemberBase):
-    cdef DoubleArray _cached_val
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSDoubleArrayRecordField()[self]
-
-    def read(self) -> DoubleArray:
-        cdef h_rfield_array_double_t handle
-
-        if not self._is_cached:
-            field_ref = self._field_ref()
-            self._cached_val = field_ref.read()
-            self._is_cached = True
-
-        return self._cached_value
-
-cdef class MDSDoubleArrayRecordMember(MDSRecordMemberBase):
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSDoubleArrayRecordField()[self]
-
-    def read(self):
-        return self._field_ref().read()
-
-    def peek(self):
-        return self._field_ref().peek()
-
-    def write(self, value) -> None:
-        self._field_ref().write(value);
-
-cdef class MDSConstStringArrayRecordMember(MDSConstRecordMemberBase):
-    cdef StringArray _cached_val
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSStringArrayRecordField()[self]
-
-    def read(self) -> StringArray:
-        cdef h_rfield_array_string_t handle
-
-        if not self._is_cached:
-            field_ref = self._field_ref()
-            self._cached_val = field_ref.read()
-            self._is_cached = True
-
-        return self._cached_value
-
-cdef class MDSStringArrayRecordMember(MDSRecordMemberBase):
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSStringArrayRecordField()[self]
-
-    def read(self):
-        return self._field_ref().read()
-
-    def peek(self):
-        return self._field_ref().peek()
-
-    def write(self, value) -> None:
-        self._field_ref().write(value);
-
-cdef class MDSConstRecordArrayRecordMember(MDSConstRecordMemberBase):
-    cdef RecordArray _cached_val
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSRecordArrayRecordField()[self]
-
-    def read(self) -> RecordArray:
-        cdef h_rfield_array_record_t handle
-
-        if not self._is_cached:
-            field_ref = self._field_ref()
-            self._cached_val = field_ref.read()
-            self._is_cached = True
-
-        return self._cached_value
-
-cdef class MDSRecordArrayRecordMember(MDSRecordMemberBase):
-
-    def _field_ref(self) -> MDSConstRecordFieldReferenceBase:
-        return MDSRecordArrayRecordField()[self]
-
-    def read(self):
-        return self._field_ref().read()
-
-    def peek(self):
-        return self._field_ref().peek()
-
-    def write(self, value) -> None:
-        self._field_ref().write(value);
 # END INJECTION
 
 ######################################################### RECORD TYPE DECLARATIONS
@@ -3703,30 +788,25 @@ class MDSRecordFieldDeclaration(object):
 
 cdef class MDSRecordHandleWrapper(object):
     cdef:
-        record_type_handle _handle
+        h_record_type_t _handle
+        h_c_record_type_t _handle
 
-
-cdef class MDSConstRecordHandleWrapper(object):
-    cdef:
-        const_record_type_handle _handle
-
-
-cdef emplace_handle(record_type_handle wrapped):
+cdef emplace_handle(h_record_type_t wrapped):
     wrapper = MDSRecordHandleWrapper()
     wrapper._handle = wrapped
     return wrapper
 
 cdef emplace_const_handle_from_decl(MDSRecordTypeDeclaration decl):
-    wrapper = MDSConstRecordHandleWrapper()
+    wrapper = MDSRecordHandleWrapper()
     wrapper._handle = decl._created_type
     return wrapper
 
 
-cdef MDSRecordHandleWrapper __declare_mds_record(interned_string_handle ish, MDSConstRecordHandleWrapper wrapper):
+cdef MDSRecordHandleWrapper __declare_mds_record(h_istring_t ish, MDSRecordHandleWrapper wrapper):
     cdef:
         MDSRecordHandleWrapper retval = MDSRecordHandleWrapper()
-        const_record_type_handle unwrapped_handle = wrapper._handle
-        record_type_handle new_handle = record_type_handle.declare(ish, unwrapped_handle)
+        h_c_record_type_t unwrapped_handle = wrapper._handle
+        h_record_type_t new_handle = h_record_type_t.declare(ish, unwrapped_handle)
 
     retval._handle = new_handle
     return retval
@@ -3734,11 +814,11 @@ cdef MDSRecordHandleWrapper __declare_mds_record(interned_string_handle ish, MDS
 
 cdef class MDSRecordTypeDeclaration(object):
     cdef:
-        list _field_decls
-        dict _field_member_pairs
-        record_type_handle _declared_type
-        const_record_type_handle _created_type
-        type _cls
+        list                _field_decls
+        dict                _field_member_pairs
+        h_record_type_t     _declared_type
+        h_c_record_type_t   _created_type
+        type                _cls
 
     def __cinit__(self, cls: type, field_member_pairs: Dict[Text, MDSRecordFieldMemberPair]):
         cdef MDSRecordHandleWrapper wrapper = self.declare(
@@ -3746,7 +826,7 @@ cdef class MDSRecordTypeDeclaration(object):
             cls.__bases__[0]
         )
 
-        self._declared_type = record_type_handle(wrapper._handle)
+        self._declared_type = h_record_type_t(wrapper._handle)
         self._cls = cls
         self._field_decls = list()
         self._field_member_pairs = field_member_pairs
@@ -3768,16 +848,16 @@ cdef class MDSRecordTypeDeclaration(object):
         TODO: s should be a parameterized managed_type<R>?
         """
         print(f"?> Declaring {name} with parent {parent.__name__}")
-        cdef interned_string_handle ish = __extract_ish(name)
+        cdef h_istring_t ish = __extract_ish(name)
 
         if parent is Record:
-            return emplace_handle(record_type_handle.declare(ish, const_record_type_handle()))
+            return emplace_handle(h_record_type_t.declare(ish, h_c_record_type_t()))
 
         assert issubclass(parent, Record), "Super type not a record type"
         print(f" > Passed subclass assertion")
         # As soon as `s` came into scope, it should have registered its type,
         # so this is unnecessary, but left in for posterity.
-        sp = parent.type_decl.ensure_created()  # MDSConstRecordHandleWrapper
+        sp = parent.type_decl.ensure_created()  # MDSRecordHandleWrapper
         print(f" > Ensure created run OK on parent, returned {sp}")
         return __declare_mds_record(ish, sp)
 
@@ -3785,7 +865,7 @@ cdef class MDSRecordTypeDeclaration(object):
         for label, field_member_pair in fields.items():
             self._field_decls.append(
                 MDSRecordFieldDeclaration(
-                    String(label),  # We want to grab the interned_string_handle later
+                    String(label),  # We want to grab the h_istring_t later
                     field_member_pair.field
                 )
             )
@@ -3798,7 +878,7 @@ cdef class MDSRecordTypeDeclaration(object):
         for fd in self._field_decls:
             fd.field.ensure_type()
 
-    def ensure_created(self) -> MDSConstRecordHandleWrapper:
+    def ensure_created(self) -> MDSRecordHandleWrapper:
         ident = __RECORD_IDENTS[self._cls.__name__]
 
         if not ident in __RECORD_DECLARED_TYPES:
@@ -3806,7 +886,7 @@ cdef class MDSRecordTypeDeclaration(object):
                 # Ensure no one else has beat us to the punch (call_once)
                 if not ident in __RECORD_DECLARED_TYPES:
                     self.declare_fields()
-                    self._created_type = const_record_type_handle(self._declared_type.ensure_created())
+                    self._created_type = h_c_record_type_t(self._declared_type.ensure_created())
                     self.ensure_field_types()
                     __RECORD_DECLARED_TYPES[ident] = self
 
@@ -3822,12 +902,12 @@ cdef class String(MDSIndexedObject):
     but backed by MDS. As with str, Strings are immutable.
     """
     cdef:
-        managed_string_handle _handle
-        interned_string_handle _ish
+        h_mstring_t _handle
+        h_istring_t _ish
 
     def __cinit__(self, value=""):
         self._ish = convert_py_to_ish(value) 
-        self._handle = managed_string_handle(self._ish)
+        self._handle = h_mstring_t(self._ish)
         self.__iter_idx = 0
 
     def __len__(self):
@@ -4062,8 +1142,8 @@ cdef class String(MDSIndexedObject):
         return String(str(self).zfill(*args, **kwargs))
 
 
-cdef inline interned_string_handle __extract_ish(String s):
-    cdef interned_string_handle retval = s._ish
+cdef inline h_istring_t __extract_ish(String s):
+    cdef h_istring_t retval = s._ish
     return retval
 
 cdef String __cast_to_mds_string(object possible_str):
@@ -4126,9 +1206,9 @@ cdef class Path(object):
 
 cdef class Impl(object):
     cdef:
-        bool _absolutep
-        size_t _initial_ups
-        list _names
+        bool    _absolutep
+        size_t  _initial_ups
+        list    _names
 
     def __cinit__(self, cpts: List[Path]):
         self._absolutep = False
@@ -4242,9 +1322,9 @@ cdef class Impl(object):
 
 cdef class Namespace(MDSObject):
     cdef:
-        namespace_handle _handle
-        Namespace _parent
-        String _name
+        h_namespace_t   _handle
+        Namespace       _parent
+        String          _name
 
     def __cinit__(self, Namespace parent, name):
         cdef:
@@ -4323,13 +1403,13 @@ cdef class Namespace(MDSObject):
         global __NAMESPACE_ROOT
 
         if __NAMESPACE_ROOT is None:
-            __NAMESPACE_ROOT = Namespace_Init(namespace_handle._global(), None, String())
+            __NAMESPACE_ROOT = Namespace_Init(h_namespace_t._global(), None, String())
 
         return __NAMESPACE_ROOT
 
     @staticmethod
     def current() -> Namespace:
-        return MDSThreadLocalData.current_namespace
+        return MDSThreadData.current_namespace
 
     @staticmethod
     def from_path(path: PathTypes) -> Namespace:
@@ -4344,8 +1424,8 @@ cdef class Namespace(MDSObject):
 
     # def create_child(self, child_id: PathTypes, create_if_missing=True) -> Optional[Namespace]:
     #     cdef:
-    #         interned_string_handle ish
-    #         namespace_handle handle
+    #         h_istring_t ish
+    #         h_namespace_t handle
     #         String definite
 
     #     definite = __cast_to_mds_string(child_id)
@@ -4360,7 +1440,7 @@ cdef class Namespace(MDSObject):
 
     # @staticmethod
     # def get_global() -> Namespace:
-    #     return Namespace_Init(handle=namespace_handle._global())
+    #     return Namespace_Init(handle=h_namespace_t._global())
 
     # @staticmethod
     # def get_current():
@@ -4385,7 +1465,7 @@ cdef class Namespace(MDSObject):
             return __NAMESPACE_SEPARATOR
 
 
-cdef inline Namespace_Init(namespace_handle handle, Namespace parent, String name):
+cdef inline Namespace_Init(h_namespace_t handle, Namespace parent, String name):
     initialize_base_task()
     result = Namespace(parent=parent, name=name)
     result._handle = handle
@@ -4401,8 +1481,8 @@ cdef Impl __copy_Impl(Impl origin):
 
 cdef class MDSNameBindingBase(object):
     cdef:
-        Namespace _namespace
-        String _name
+        Namespace   _namespace
+        String      _name
 
     def __cinit__(self, Namespace ns, String n):
         self._namespace = ns
@@ -4434,32 +1514,7 @@ cdef class MDSNameBinding(MDSNameBindingBase):
     def as_type(self, t: MDSTypeInfo) -> MDSTypedNameBinding:
         mappings = {
             # START INJECTION | tmpl_namespace_mapping(Primitives,Arrays,Composites)
-            mds.typing.primitives.bool: MDSBoolNameBinding,
-            mds.typing.primitives.byte: MDSByteNameBinding,
-            mds.typing.primitives.ubyte: MDSUByteNameBinding,
-            mds.typing.primitives.short: MDSShortNameBinding,
-            mds.typing.primitives.ushort: MDSUShortNameBinding,
-            mds.typing.primitives.int: MDSIntNameBinding,
-            mds.typing.primitives.uint: MDSUIntNameBinding,
-            mds.typing.primitives.long: MDSLongNameBinding,
-            mds.typing.primitives.ulong: MDSULongNameBinding,
-            mds.typing.primitives.float: MDSFloatNameBinding,
-            mds.typing.primitives.double: MDSDoubleNameBinding,
-            mds.typing.arrays.bool: MDSBoolArrayNameBinding,
-            mds.typing.arrays.byte: MDSByteArrayNameBinding,
-            mds.typing.arrays.ubyte: MDSUByteArrayNameBinding,
-            mds.typing.arrays.short: MDSShortArrayNameBinding,
-            mds.typing.arrays.ushort: MDSUShortArrayNameBinding,
-            mds.typing.arrays.int: MDSIntArrayNameBinding,
-            mds.typing.arrays.uint: MDSUIntArrayNameBinding,
-            mds.typing.arrays.long: MDSLongArrayNameBinding,
-            mds.typing.arrays.ulong: MDSULongArrayNameBinding,
-            mds.typing.arrays.float: MDSFloatArrayNameBinding,
-            mds.typing.arrays.double: MDSDoubleArrayNameBinding,
-            mds.typing.arrays.string: MDSStringArrayNameBinding,
-            mds.typing.arrays.record: MDSRecordArrayNameBinding,
-            mds.typing.composites.string: MDSStringNameBinding,
-            mds.typing.composites.record: MDSRecordNameBinding,
+
             # END INJECTION
         }
 
@@ -4475,9 +1530,9 @@ cdef class MDSNameBinding(MDSNameBindingBase):
 
     def as_namespace(self) -> Namespace:
         cdef:
-            interned_string_handle nhandle = self._name._ish
-            namespace_handle h = self._namespace._handle
-            namespace_handle ch
+            h_istring_t nhandle = self._name._ish
+            h_namespace_t h = self._namespace._handle
+            h_namespace_t ch
 
         if self._root_binding:
             return Namespace.root()
@@ -4488,8 +1543,8 @@ cdef class MDSNameBinding(MDSNameBindingBase):
     def bind(self, value: MDSPrimitiveBase):
         # TODO: What should be bind-able?
         # cdef:
-        #     interned_string_handle nhandle = self._name._ish
-        #     namespace_handle h = self._namespace._handle
+        #     h_istring_t nhandle = self._name._ish
+        #     h_namespace_t h = self._namespace._handle
         if not isinstance(value, MDSPrimitiveBase):
             raise TypeError("Can't bind a non `MDSObject`")
         # I can either do an if/elif for every possible wrapper, or just
@@ -4524,902 +1579,16 @@ cdef class MDSRecordNameBinding(MDSTypedNameBinding):
 
 # START INJECTION | tmpl_namespace_typed_primitive_bindings(Primitives)
 
-cdef class MDSBoolNameBinding(MDSTypedNameBinding):
-    cdef h_mbool_t _type
-
-    def get(self) -> Optional[Bool]:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            h_mbool_t thandle = self._type
-            namespace_handle h = self._namespace._handle
-        try:
-            return Bool(h.lookup_bool(nhandle, thandle))
-        except:  # unbound_name_ex
-            return None
-
-    def bind(self, Bool val) -> None:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            namespace_handle h = self._namespace._handle
-
-        h.bind_bool(nhandle, <bool> val.python_type)
-
-cdef class MDSByteNameBinding(MDSTypedNameBinding):
-    cdef h_mbyte_t _type
-
-    def get(self) -> Optional[Byte]:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            h_mbyte_t thandle = self._type
-            namespace_handle h = self._namespace._handle
-        try:
-            return Byte(h.lookup_byte(nhandle, thandle))
-        except:  # unbound_name_ex
-            return None
-
-    def bind(self, Byte val) -> None:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            namespace_handle h = self._namespace._handle
-
-        h.bind_byte(nhandle, <int8_t> val.python_type)
-
-cdef class MDSUByteNameBinding(MDSTypedNameBinding):
-    cdef h_mubyte_t _type
-
-    def get(self) -> Optional[UByte]:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            h_mubyte_t thandle = self._type
-            namespace_handle h = self._namespace._handle
-        try:
-            return UByte(h.lookup_ubyte(nhandle, thandle))
-        except:  # unbound_name_ex
-            return None
-
-    def bind(self, UByte val) -> None:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            namespace_handle h = self._namespace._handle
-
-        h.bind_ubyte(nhandle, <uint8_t> val.python_type)
-
-cdef class MDSShortNameBinding(MDSTypedNameBinding):
-    cdef h_mshort_t _type
-
-    def get(self) -> Optional[Short]:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            h_mshort_t thandle = self._type
-            namespace_handle h = self._namespace._handle
-        try:
-            return Short(h.lookup_short(nhandle, thandle))
-        except:  # unbound_name_ex
-            return None
-
-    def bind(self, Short val) -> None:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            namespace_handle h = self._namespace._handle
-
-        h.bind_short(nhandle, <int16_t> val.python_type)
-
-cdef class MDSUShortNameBinding(MDSTypedNameBinding):
-    cdef h_mushort_t _type
-
-    def get(self) -> Optional[UShort]:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            h_mushort_t thandle = self._type
-            namespace_handle h = self._namespace._handle
-        try:
-            return UShort(h.lookup_ushort(nhandle, thandle))
-        except:  # unbound_name_ex
-            return None
-
-    def bind(self, UShort val) -> None:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            namespace_handle h = self._namespace._handle
-
-        h.bind_ushort(nhandle, <uint16_t> val.python_type)
-
-cdef class MDSIntNameBinding(MDSTypedNameBinding):
-    cdef h_mint_t _type
-
-    def get(self) -> Optional[Int]:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            h_mint_t thandle = self._type
-            namespace_handle h = self._namespace._handle
-        try:
-            return Int(h.lookup_int(nhandle, thandle))
-        except:  # unbound_name_ex
-            return None
-
-    def bind(self, Int val) -> None:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            namespace_handle h = self._namespace._handle
-
-        h.bind_int(nhandle, <int32_t> val.python_type)
-
-cdef class MDSUIntNameBinding(MDSTypedNameBinding):
-    cdef h_muint_t _type
-
-    def get(self) -> Optional[UInt]:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            h_muint_t thandle = self._type
-            namespace_handle h = self._namespace._handle
-        try:
-            return UInt(h.lookup_uint(nhandle, thandle))
-        except:  # unbound_name_ex
-            return None
-
-    def bind(self, UInt val) -> None:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            namespace_handle h = self._namespace._handle
-
-        h.bind_uint(nhandle, <uint32_t> val.python_type)
-
-cdef class MDSLongNameBinding(MDSTypedNameBinding):
-    cdef h_mlong_t _type
-
-    def get(self) -> Optional[Long]:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            h_mlong_t thandle = self._type
-            namespace_handle h = self._namespace._handle
-        try:
-            return Long(h.lookup_long(nhandle, thandle))
-        except:  # unbound_name_ex
-            return None
-
-    def bind(self, Long val) -> None:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            namespace_handle h = self._namespace._handle
-
-        h.bind_long(nhandle, <int64_t> val.python_type)
-
-cdef class MDSULongNameBinding(MDSTypedNameBinding):
-    cdef h_mulong_t _type
-
-    def get(self) -> Optional[ULong]:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            h_mulong_t thandle = self._type
-            namespace_handle h = self._namespace._handle
-        try:
-            return ULong(h.lookup_ulong(nhandle, thandle))
-        except:  # unbound_name_ex
-            return None
-
-    def bind(self, ULong val) -> None:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            namespace_handle h = self._namespace._handle
-
-        h.bind_ulong(nhandle, <uint64_t> val.python_type)
-
-cdef class MDSFloatNameBinding(MDSTypedNameBinding):
-    cdef h_mfloat_t _type
-
-    def get(self) -> Optional[Float]:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            h_mfloat_t thandle = self._type
-            namespace_handle h = self._namespace._handle
-        try:
-            return Float(h.lookup_float(nhandle, thandle))
-        except:  # unbound_name_ex
-            return None
-
-    def bind(self, Float val) -> None:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            namespace_handle h = self._namespace._handle
-
-        h.bind_float(nhandle, <float> val.python_type)
-
-cdef class MDSDoubleNameBinding(MDSTypedNameBinding):
-    cdef h_mdouble_t _type
-
-    def get(self) -> Optional[Double]:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            h_mdouble_t thandle = self._type
-            namespace_handle h = self._namespace._handle
-        try:
-            return Double(h.lookup_double(nhandle, thandle))
-        except:  # unbound_name_ex
-            return None
-
-    def bind(self, Double val) -> None:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            namespace_handle h = self._namespace._handle
-
-        h.bind_double(nhandle, <double> val.python_type)
 # END INJECTION
 
 # START INJECTION | tmpl_namespace_typed_array_bindings(Arrays)
 
-cdef class MDSBoolArrayNameBinding(MDSTypedNameBinding):
-
-    def get(self) -> Optional[BoolArray]:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            h_array_bool_t thandle
-            h_marray_bool_t retrieved
-            BoolArray retval = BoolArray()
-            namespace_handle h = self._namespace._handle
-        try:
-            retrieved = h.lookup_bool_array(nhandle, thandle)
-            retval._handle = retrieved
-            return retval
-        except:  # unbound_name_ex
-            return None
-
-    def bind(self, BoolArray val) -> None:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            namespace_handle h = self._namespace._handle
-
-        h.bind_bool_array(nhandle, val._handle)
-
-cdef class MDSByteArrayNameBinding(MDSTypedNameBinding):
-
-    def get(self) -> Optional[ByteArray]:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            h_array_byte_t thandle
-            h_marray_byte_t retrieved
-            ByteArray retval = ByteArray()
-            namespace_handle h = self._namespace._handle
-        try:
-            retrieved = h.lookup_byte_array(nhandle, thandle)
-            retval._handle = retrieved
-            return retval
-        except:  # unbound_name_ex
-            return None
-
-    def bind(self, ByteArray val) -> None:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            namespace_handle h = self._namespace._handle
-
-        h.bind_byte_array(nhandle, val._handle)
-
-cdef class MDSUByteArrayNameBinding(MDSTypedNameBinding):
-
-    def get(self) -> Optional[UByteArray]:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            h_array_ubyte_t thandle
-            h_marray_ubyte_t retrieved
-            UByteArray retval = UByteArray()
-            namespace_handle h = self._namespace._handle
-        try:
-            retrieved = h.lookup_ubyte_array(nhandle, thandle)
-            retval._handle = retrieved
-            return retval
-        except:  # unbound_name_ex
-            return None
-
-    def bind(self, UByteArray val) -> None:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            namespace_handle h = self._namespace._handle
-
-        h.bind_ubyte_array(nhandle, val._handle)
-
-cdef class MDSShortArrayNameBinding(MDSTypedNameBinding):
-
-    def get(self) -> Optional[ShortArray]:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            h_array_short_t thandle
-            h_marray_short_t retrieved
-            ShortArray retval = ShortArray()
-            namespace_handle h = self._namespace._handle
-        try:
-            retrieved = h.lookup_short_array(nhandle, thandle)
-            retval._handle = retrieved
-            return retval
-        except:  # unbound_name_ex
-            return None
-
-    def bind(self, ShortArray val) -> None:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            namespace_handle h = self._namespace._handle
-
-        h.bind_short_array(nhandle, val._handle)
-
-cdef class MDSUShortArrayNameBinding(MDSTypedNameBinding):
-
-    def get(self) -> Optional[UShortArray]:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            h_array_ushort_t thandle
-            h_marray_ushort_t retrieved
-            UShortArray retval = UShortArray()
-            namespace_handle h = self._namespace._handle
-        try:
-            retrieved = h.lookup_ushort_array(nhandle, thandle)
-            retval._handle = retrieved
-            return retval
-        except:  # unbound_name_ex
-            return None
-
-    def bind(self, UShortArray val) -> None:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            namespace_handle h = self._namespace._handle
-
-        h.bind_ushort_array(nhandle, val._handle)
-
-cdef class MDSIntArrayNameBinding(MDSTypedNameBinding):
-
-    def get(self) -> Optional[IntArray]:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            h_array_int_t thandle
-            h_marray_int_t retrieved
-            IntArray retval = IntArray()
-            namespace_handle h = self._namespace._handle
-        try:
-            retrieved = h.lookup_int_array(nhandle, thandle)
-            retval._handle = retrieved
-            return retval
-        except:  # unbound_name_ex
-            return None
-
-    def bind(self, IntArray val) -> None:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            namespace_handle h = self._namespace._handle
-
-        h.bind_int_array(nhandle, val._handle)
-
-cdef class MDSUIntArrayNameBinding(MDSTypedNameBinding):
-
-    def get(self) -> Optional[UIntArray]:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            h_array_uint_t thandle
-            h_marray_uint_t retrieved
-            UIntArray retval = UIntArray()
-            namespace_handle h = self._namespace._handle
-        try:
-            retrieved = h.lookup_uint_array(nhandle, thandle)
-            retval._handle = retrieved
-            return retval
-        except:  # unbound_name_ex
-            return None
-
-    def bind(self, UIntArray val) -> None:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            namespace_handle h = self._namespace._handle
-
-        h.bind_uint_array(nhandle, val._handle)
-
-cdef class MDSLongArrayNameBinding(MDSTypedNameBinding):
-
-    def get(self) -> Optional[LongArray]:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            h_array_long_t thandle
-            h_marray_long_t retrieved
-            LongArray retval = LongArray()
-            namespace_handle h = self._namespace._handle
-        try:
-            retrieved = h.lookup_long_array(nhandle, thandle)
-            retval._handle = retrieved
-            return retval
-        except:  # unbound_name_ex
-            return None
-
-    def bind(self, LongArray val) -> None:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            namespace_handle h = self._namespace._handle
-
-        h.bind_long_array(nhandle, val._handle)
-
-cdef class MDSULongArrayNameBinding(MDSTypedNameBinding):
-
-    def get(self) -> Optional[ULongArray]:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            h_array_ulong_t thandle
-            h_marray_ulong_t retrieved
-            ULongArray retval = ULongArray()
-            namespace_handle h = self._namespace._handle
-        try:
-            retrieved = h.lookup_ulong_array(nhandle, thandle)
-            retval._handle = retrieved
-            return retval
-        except:  # unbound_name_ex
-            return None
-
-    def bind(self, ULongArray val) -> None:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            namespace_handle h = self._namespace._handle
-
-        h.bind_ulong_array(nhandle, val._handle)
-
-cdef class MDSFloatArrayNameBinding(MDSTypedNameBinding):
-
-    def get(self) -> Optional[FloatArray]:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            h_array_float_t thandle
-            h_marray_float_t retrieved
-            FloatArray retval = FloatArray()
-            namespace_handle h = self._namespace._handle
-        try:
-            retrieved = h.lookup_float_array(nhandle, thandle)
-            retval._handle = retrieved
-            return retval
-        except:  # unbound_name_ex
-            return None
-
-    def bind(self, FloatArray val) -> None:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            namespace_handle h = self._namespace._handle
-
-        h.bind_float_array(nhandle, val._handle)
-
-cdef class MDSDoubleArrayNameBinding(MDSTypedNameBinding):
-
-    def get(self) -> Optional[DoubleArray]:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            h_array_double_t thandle
-            h_marray_double_t retrieved
-            DoubleArray retval = DoubleArray()
-            namespace_handle h = self._namespace._handle
-        try:
-            retrieved = h.lookup_double_array(nhandle, thandle)
-            retval._handle = retrieved
-            return retval
-        except:  # unbound_name_ex
-            return None
-
-    def bind(self, DoubleArray val) -> None:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            namespace_handle h = self._namespace._handle
-
-        h.bind_double_array(nhandle, val._handle)
-
-cdef class MDSStringArrayNameBinding(MDSTypedNameBinding):
-
-    def get(self) -> Optional[StringArray]:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            h_array_string_t thandle
-            h_marray_string_t retrieved
-            StringArray retval = StringArray()
-            namespace_handle h = self._namespace._handle
-        try:
-            retrieved = h.lookup_string_array(nhandle, thandle)
-            retval._handle = retrieved
-            return retval
-        except:  # unbound_name_ex
-            return None
-
-    def bind(self, StringArray val) -> None:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            namespace_handle h = self._namespace._handle
-
-        h.bind_string_array(nhandle, val._handle)
-
-cdef class MDSRecordArrayNameBinding(MDSTypedNameBinding):
-
-    def get(self) -> Optional[RecordArray]:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            h_array_record_t thandle
-            h_marray_record_t retrieved
-            RecordArray retval = RecordArray()
-            namespace_handle h = self._namespace._handle
-        try:
-            retrieved = h.lookup_record_array(nhandle, thandle)
-            retval._handle = retrieved
-            return retval
-        except:  # unbound_name_ex
-            return None
-
-    def bind(self, RecordArray val) -> None:
-        cdef:
-            interned_string_handle nhandle = self._name._ish
-            namespace_handle h = self._namespace._handle
-
-        h.bind_record_array(nhandle, val._handle)
 # END INJECTION
-
-# =========================================================================
-#  Helpers
-# =========================================================================
-
-cpdef inline is_record_type(obj):
-    return issubclass(obj, Record)
 
 # =========================================================================
 #  Primitives
 # =========================================================================
 
 # START INJECTION | tmpl_primitives(Primitives)
-
-cdef class Bool(MDSPrimitiveBase):
-    cdef:
-        mv_bool _type
-
-    def __cinit__(self, value):  # TODO: Set the value in _value
-        self.update(value)
-
-    def __hash__(self):
-        return hash(self.python_value)
-
-    def _to_python(self):
-        return bool_to_core_val(self._type)
-
-    def update(self, value) -> None:
-        self._type = mv_bool(self._sanitize(value, self._to_python()))
-
-    def bind_to_namespace(self, Namespace namespace, String name) -> None:
-        cdef:
-            interned_string_handle nhandle = name._ish
-            namespace_handle h = namespace._handle
-
-        h.bind_bool(nhandle, <bool> self._value)
-
-    property dtype:
-        def __get__(self):
-            return mds.typing.primitives.bool
-    
-cdef class Byte(MDSIntPrimitiveBase):
-    cdef:
-        mv_byte _type
-
-    def __cinit__(self, value):  # TODO: Set the value in _value
-        self.update(value)
-
-    def __hash__(self):
-        return hash(self.python_value)
-
-    def _to_python(self):
-        return byte_to_core_val(self._type)
-
-    def update(self, value) -> None:
-        self._type = mv_byte(self._sanitize(value, self._to_python()))
-
-    def bind_to_namespace(self, Namespace namespace, String name) -> None:
-        cdef:
-            interned_string_handle nhandle = name._ish
-            namespace_handle h = namespace._handle
-
-        h.bind_byte(nhandle, <int8_t> self._value)
-
-    property dtype:
-        def __get__(self):
-            return mds.typing.primitives.byte
-    
-    property MIN:
-        def __get__(self):
-            return -128
-
-    property MAX:
-        def __get__(self):
-            return 127 
-
-cdef class UByte(MDSIntPrimitiveBase):
-    cdef:
-        mv_ubyte _type
-
-    def __cinit__(self, value):  # TODO: Set the value in _value
-        self.update(value)
-
-    def __hash__(self):
-        return hash(self.python_value)
-
-    def _to_python(self):
-        return ubyte_to_core_val(self._type)
-
-    def update(self, value) -> None:
-        self._type = mv_ubyte(self._sanitize(value, self._to_python()))
-
-    def bind_to_namespace(self, Namespace namespace, String name) -> None:
-        cdef:
-            interned_string_handle nhandle = name._ish
-            namespace_handle h = namespace._handle
-
-        h.bind_ubyte(nhandle, <uint8_t> self._value)
-
-    property dtype:
-        def __get__(self):
-            return mds.typing.primitives.ubyte
-    
-    property MIN:
-        def __get__(self):
-            return 0
-
-    property MAX:
-        def __get__(self):
-            return 255 
-
-cdef class Short(MDSIntPrimitiveBase):
-    cdef:
-        mv_short _type
-
-    def __cinit__(self, value):  # TODO: Set the value in _value
-        self.update(value)
-
-    def __hash__(self):
-        return hash(self.python_value)
-
-    def _to_python(self):
-        return short_to_core_val(self._type)
-
-    def update(self, value) -> None:
-        self._type = mv_short(self._sanitize(value, self._to_python()))
-
-    def bind_to_namespace(self, Namespace namespace, String name) -> None:
-        cdef:
-            interned_string_handle nhandle = name._ish
-            namespace_handle h = namespace._handle
-
-        h.bind_short(nhandle, <int16_t> self._value)
-
-    property dtype:
-        def __get__(self):
-            return mds.typing.primitives.short
-    
-    property MIN:
-        def __get__(self):
-            return -32768
-
-    property MAX:
-        def __get__(self):
-            return 32767 
-
-cdef class UShort(MDSIntPrimitiveBase):
-    cdef:
-        mv_ushort _type
-
-    def __cinit__(self, value):  # TODO: Set the value in _value
-        self.update(value)
-
-    def __hash__(self):
-        return hash(self.python_value)
-
-    def _to_python(self):
-        return ushort_to_core_val(self._type)
-
-    def update(self, value) -> None:
-        self._type = mv_ushort(self._sanitize(value, self._to_python()))
-
-    def bind_to_namespace(self, Namespace namespace, String name) -> None:
-        cdef:
-            interned_string_handle nhandle = name._ish
-            namespace_handle h = namespace._handle
-
-        h.bind_ushort(nhandle, <uint16_t> self._value)
-
-    property dtype:
-        def __get__(self):
-            return mds.typing.primitives.ushort
-    
-    property MIN:
-        def __get__(self):
-            return 0
-
-    property MAX:
-        def __get__(self):
-            return 65535 
-
-cdef class Int(MDSIntPrimitiveBase):
-    cdef:
-        mv_int _type
-
-    def __cinit__(self, value):  # TODO: Set the value in _value
-        self.update(value)
-
-    def __hash__(self):
-        return hash(self.python_value)
-
-    def _to_python(self):
-        return int_to_core_val(self._type)
-
-    def update(self, value) -> None:
-        self._type = mv_int(self._sanitize(value, self._to_python()))
-
-    def bind_to_namespace(self, Namespace namespace, String name) -> None:
-        cdef:
-            interned_string_handle nhandle = name._ish
-            namespace_handle h = namespace._handle
-
-        h.bind_int(nhandle, <int32_t> self._value)
-
-    property dtype:
-        def __get__(self):
-            return mds.typing.primitives.int
-    
-    property MIN:
-        def __get__(self):
-            return -2147483648
-
-    property MAX:
-        def __get__(self):
-            return 2147483647 
-
-cdef class UInt(MDSIntPrimitiveBase):
-    cdef:
-        mv_uint _type
-
-    def __cinit__(self, value):  # TODO: Set the value in _value
-        self.update(value)
-
-    def __hash__(self):
-        return hash(self.python_value)
-
-    def _to_python(self):
-        return uint_to_core_val(self._type)
-
-    def update(self, value) -> None:
-        self._type = mv_uint(self._sanitize(value, self._to_python()))
-
-    def bind_to_namespace(self, Namespace namespace, String name) -> None:
-        cdef:
-            interned_string_handle nhandle = name._ish
-            namespace_handle h = namespace._handle
-
-        h.bind_uint(nhandle, <uint32_t> self._value)
-
-    property dtype:
-        def __get__(self):
-            return mds.typing.primitives.uint
-    
-    property MIN:
-        def __get__(self):
-            return 0
-
-    property MAX:
-        def __get__(self):
-            return 4294967295 
-
-cdef class Long(MDSIntPrimitiveBase):
-    cdef:
-        mv_long _type
-
-    def __cinit__(self, value):  # TODO: Set the value in _value
-        self.update(value)
-
-    def __hash__(self):
-        return hash(self.python_value)
-
-    def _to_python(self):
-        return long_to_core_val(self._type)
-
-    def update(self, value) -> None:
-        self._type = mv_long(self._sanitize(value, self._to_python()))
-
-    def bind_to_namespace(self, Namespace namespace, String name) -> None:
-        cdef:
-            interned_string_handle nhandle = name._ish
-            namespace_handle h = namespace._handle
-
-        h.bind_long(nhandle, <int64_t> self._value)
-
-    property dtype:
-        def __get__(self):
-            return mds.typing.primitives.long
-    
-    property MIN:
-        def __get__(self):
-            return -9223372036854775808
-
-    property MAX:
-        def __get__(self):
-            return 9223372036854775807 
-
-cdef class ULong(MDSIntPrimitiveBase):
-    cdef:
-        mv_ulong _type
-
-    def __cinit__(self, value):  # TODO: Set the value in _value
-        self.update(value)
-
-    def __hash__(self):
-        return hash(self.python_value)
-
-    def _to_python(self):
-        return ulong_to_core_val(self._type)
-
-    def update(self, value) -> None:
-        self._type = mv_ulong(self._sanitize(value, self._to_python()))
-
-    def bind_to_namespace(self, Namespace namespace, String name) -> None:
-        cdef:
-            interned_string_handle nhandle = name._ish
-            namespace_handle h = namespace._handle
-
-        h.bind_ulong(nhandle, <uint64_t> self._value)
-
-    property dtype:
-        def __get__(self):
-            return mds.typing.primitives.ulong
-    
-    property MIN:
-        def __get__(self):
-            return 0
-
-    property MAX:
-        def __get__(self):
-            return 18446744073709551615 
-
-cdef class Float(MDSFloatPrimitiveBase):
-    cdef:
-        mv_float _type
-
-    def __cinit__(self, value):  # TODO: Set the value in _value
-        self.update(value)
-
-    def __hash__(self):
-        return hash(self.python_value)
-
-    def _to_python(self):
-        return float_to_core_val(self._type)
-
-    def update(self, value) -> None:
-        self._type = mv_float(self._sanitize(value, self._to_python()))
-
-    def bind_to_namespace(self, Namespace namespace, String name) -> None:
-        cdef:
-            interned_string_handle nhandle = name._ish
-            namespace_handle h = namespace._handle
-
-        h.bind_float(nhandle, <float> self._value)
-
-    property dtype:
-        def __get__(self):
-            return mds.typing.primitives.float
-    
-cdef class Double(MDSFloatPrimitiveBase):
-    cdef:
-        mv_double _type
-
-    def __cinit__(self, value):  # TODO: Set the value in _value
-        self.update(value)
-
-    def __hash__(self):
-        return hash(self.python_value)
-
-    def _to_python(self):
-        return double_to_core_val(self._type)
-
-    def update(self, value) -> None:
-        self._type = mv_double(self._sanitize(value, self._to_python()))
-
-    def bind_to_namespace(self, Namespace namespace, String name) -> None:
-        cdef:
-            interned_string_handle nhandle = name._ish
-            namespace_handle h = namespace._handle
-
-        h.bind_double(nhandle, <double> self._value)
-
-    property dtype:
-        def __get__(self):
-            return mds.typing.primitives.double
-
 
 # END INJECTION

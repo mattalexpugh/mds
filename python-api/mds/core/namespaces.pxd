@@ -44,13 +44,13 @@ cdef extern from "mds_core_api.h" namespace "mds::api" nogil:
 
         @staticmethod
         namespace_handle _global "global"()
-        h_mrecord_t lookup(const h_istring_t&, const record_type_handle&);
+        h_mrecord_t lookup(const h_istring_t&, const h_record_type_t&);
         uint64_t hash1()
     
         h_mstring_t lookup_string "lookup<mds::api::kind::STRING,mds::core::kind_type<mds::api::kind::STRING>,false,true>"(h_istring_t, const h_mstring_t&)
         bool bind_string "bind<mds::api::kind::STRING>"(h_istring_t, h_mstring_t)
         
-        h_mrecord_t lookup_record "lookup<false,true>"(h_istring_t, const record_type_handle&)
+        h_mrecord_t lookup_record "lookup<false,true>"(h_istring_t, const h_record_type_t&)
         bool bind_record "bind<mds::api::kind::RECORD>"(h_istring_t, h_rtype_t)
 
 # START INJECTION | tmpl_api_namespaces_primitives(Primitives)

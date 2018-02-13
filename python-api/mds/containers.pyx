@@ -26,11 +26,8 @@ provided you also meet the terms and conditions of the Application license.
 from mds.core.tasks cimport *
 from mds.core.isolation_contexts cimport *
 
-from mds.threading import MDSThreadData
-
 from datetime import datetime, timedelta
-from threading import local
-from typing import Any, Dict, Callable, List, Text, Type, Iterable, Sequence, Tuple, Optional
+from typing import Any, Dict, Callable, List, Text, Iterable, Sequence, Tuple, Optional
 
 # Call this on module load
 initialize_base_task()
@@ -124,7 +121,8 @@ class Condition(object):
             self._conclusion = datetime.now() + conclusion
 
 
-Controls = Iterable[Controls._ControlBase]
+# Type reference
+Controls = Iterable[Condition._ControlBase]
 
 
 class OptionsBase(object):
@@ -135,18 +133,19 @@ class OptionsBase(object):
         self._opts = [x for x in conds]
 
     @classmethod
-    def check(cls, cs: Controls, arg: Any):  # -> bool
+    def check(cls, cs: Controls, arg: Any) -> 'bool':
         for control in cs:
             if control(arg):
                 return True
 
         return False
 
-    def add(self, other: OptionsBase) -> None:
+    def add(self, other: 'OptionsBase') -> None:
         self._opts.extend(other._opts)
 
     def controls(self) -> Controls:
         return self._opts.copy()
+
 
 class RerunOptions(OptionsBase):
     pass
@@ -323,6 +322,7 @@ cdef class PublicationResult(object):
     property succeeded:
         def __get__(self):
             return <bint> self._handle.succeeded()
+
 
 cdef PublicationResult_Init(h_pub_attempt_t handle):
     initialize_base_task()
@@ -720,14 +720,17 @@ class ComputedVal(object):
 
 cdef class Task(object):
     cdef:
-        tuple _args
-        object _target
-        bint _expired
-        list _prepare_for_redo
-        h_task_t _handle
-        h_isoctxt_t _ctxt
+        tuple           _args
+        object          _target
+        bint            _expired
+        list            _prepare_for_redo
+        h_task_t        _handle
+        h_isoctxt_t     _ctxt
 
     def __cinit__(self, target=None, args=tuple()):
+        cdef:
+            h_task_t task
+
         Task.initialize_base_task()
         self._target = target
         self._args = args
@@ -735,7 +738,8 @@ cdef class Task(object):
         
         if target is not None:
             self._expired = False
-            add_task_handle(self, TaskWrapper.get_current().get_context().push_prevailing())
+            task = TaskWrapper.get_current().get_context().push_prevailing()
+            self._handle = task
             self._ctxt = self._handle.get_context()
         else:
             self._expired = True
@@ -751,18 +755,30 @@ cdef class Task(object):
         initialize_base_task()
 
     def add_dependent(self, other: Task) -> None:
+        cdef:
+            h_task_t other_handle
+            h_task_t this_handle
+
         if not isinstance(other, Task):
             raise TypeError('Argument must be of type Task')
 
         if hash(self) != hash(other):
-            _task_add_dependent(self, other)
+            this_handle = self._handle
+            other_handle = other._handle
+            this_handle.add_dependent(other_handle)
 
     def depends_on(self, other: Task) -> None:
+        cdef:
+            h_task_t other_handle
+            h_task_t this_handle
+
         if not isinstance(other, Task):
             raise TypeError('Task can only depend on other Tasks')
 
         if hash(self) != hash(other):
-            _task_add_dependent(other, self)
+            this_handle = self._handle
+            other_handle = other._handle
+            other_handle.add_dependent(this_handle)
 
     def depends_on_all(self, others: Iterable[Task]) -> None:
         map(self.depends_on, others)
@@ -837,12 +853,16 @@ cdef class Task(object):
         function 'fn' will simply be executed with no attempts for redoing
         being possible.
         """
+        cdef:
+            h_isoctxt_t isoctxt
+
         current_task = Task.get_current()
         current_isoctxt = current_task.isolation_context
 
         if current_isoctxt.is_publishable:
             task = Task(fn, args)
-            update_context_handle_in_task(task, current_isoctxt)
+            isoctxt = current_isoctxt._handle
+            self._ctxt = isoctxt
             task.run()
         else:
             print("Context not publishable")
@@ -893,27 +913,9 @@ class MDSTaskFnWrapper(object):
         return Task.as_task(self._fn,  *args, **kwargs)
 
 
-def for_each_in_tasks(list iterable, object fn):
-    map(iterable, Task.task_fn(fn))
-
 cdef inline Task_Init(h_task_t handle):
     # TODO Remove me, DEBUG
     print("Initializing task with hash {}".format(handle.hash1()))
     result = Task()
     result._handle = handle
     return result
-
-cdef object __establish_and_run(Task task, object fn, object args):
-    initialize_base_task()
-    cdef Establish c = Establish(task._handle.push())  # struct _establish => Establish
-    return fn(*args)
-
-cdef inline add_task_handle(Task task, h_task_t handle):
-    task._handle = handle
-
-cdef inline update_context_handle_in_task(Task task, IsolationContext ctxt):
-    task._ctxt = ctxt._handle
-
-cdef inline _task_add_dependent(Task first, Task second):
-    first._handle.add_dependent(second._handle)
-    return first

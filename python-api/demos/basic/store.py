@@ -106,8 +106,8 @@ class Department(Record, ident=RECORD_NAME('Department')):
     @staticmethod
     def schema():
         return {
-            'name': declare_field(mds.typing.primitives.String)
-            'number': declare_field(mds.typing.primitives.unsigned)
+            'name': declare_field(mds.typing.primitives.String),
+            'number': declare_field(mds.typing.primitives.unsigned),
             'sales_rank': declare_field(mds.typing.primitives.unsigned)
         }
 
@@ -121,10 +121,10 @@ class Product(Record, ident=RECORD_NAME('Product')):
     @staticmethod
     def schema():
         return {
-            'name': declare_field(mds.typing.composites.String)
-            'number': declare_field(mds.typing.primitives.unsigned)
-            'dept': declare_field(mds.typing.composities.Record)
-            'nbr_sold': declare_field(mds.typing.primitives.unsigned)
+            'name': declare_field(mds.typing.composites.String),
+            'number': declare_field(mds.typing.primitives.unsigned),
+            'dept': declare_field(mds.typing.composities.Record),
+            'nbr_sold': declare_field(mds.typing.primitives.unsigned),
             'sales_rank': declare_field(mds.typing.primitives.unsigned)
         }
 
@@ -206,10 +206,10 @@ class PerishableProduct(Product, ident=RECORD_NAME('PerishableProduct')):
     @staticmethod
     def schema():
         return {
-            'shelf_life': declare_field(mds.typing.primitives.unsigned)
-            'oldest': declare_field(mds.typing.primitives.unsigned)
-            'today': declare_field(mds.typing.primitives.unsigned)
-            'wastage': declare_field(mds.typing.primitives.unsigned)
+            'shelf_life': declare_field(mds.typing.primitives.unsigned),
+            'oldest': declare_field(mds.typing.primitives.unsigned),
+            'today': declare_field(mds.typing.primitives.unsigned),
+            'wastage': declare_field(mds.typing.primitives.unsigned),
             # TODO: How to instantiate MDSList(dtype=mds.types.unsigned) without len
             'stock_on_hand': declare_field(mds.typing.arrays.UIntArray)
         }
@@ -318,10 +318,10 @@ class Basket(Record, ident=RECORD_NAME('Basket')):
     def __str__(self):
         return "[{}]".format(", ".join(self.items))
 
-    def purchase(self, recent: RecentPurchases, button: Pause.Button=None) -> None:
+    def purchase(self, recent: 'RecentPurchases', button: Pause.Button=None) -> None:
         items = self.items
 
-        def worker(cls: Basket, recent: RecentPurchases, items: RecordArray) -> None:
+        def worker(cls: Basket, recent: 'RecentPurchases', items: RecordArray) -> None:
             # TODO: Need to check this internal tasks::task_fn; if it's launching
             # a task per object, I'll need to wrap that, otherwise iterating as
             # below is fine.
@@ -417,7 +417,7 @@ class RecentPurchases(Record, ident=RECORD_NAME('RecentPurchases')):
                 # We touch each of the tcs to ensure that this task
                 # is dependent on all products
                 for tc in tcs:
-                    td.get()
+                    tc.get()
 
                 # TODO: Ensure same logic: sort(pairs.begin(), pairs.end(),
                 #       greater<decltype(pairs)::value_type>());
@@ -435,9 +435,10 @@ class RecentPurchases(Record, ident=RECORD_NAME('RecentPurchases')):
         isolated(target=worker, view="snapshot", args=(array, total, tcs))
 
 
-class Store(mds.managed.Record, ident=RECORD_NAME('Store'):
+class Store(mds.managed.Record, ident=RECORD_NAME('Store')):
 
     def __init__(self, ds: RecordArray, ps: RecordArray, window_size: int):
+        # TODO: The values can't be set in schema(), need to update here
         self.depts = []
         self.products = []
         self.perishable = []
@@ -447,9 +448,9 @@ class Store(mds.managed.Record, ident=RECORD_NAME('Store'):
     def schema():
         return {
             # TODO: Again, how to declare MDSList instance of type T
-            'depts': declare_field(mds.typing.arrays.Record[Department], original=ds)
-            'products': declare_field(mds.typing.arrays.Record[Product], original=ps)
-            'perishable': declare_field(mds.typing.arrays.Record[PerishableProduct], filter(lambda x: isinstance(x, PerishableProduct), ps))
+            'depts': declare_field(mds.typing.arrays.Record[Department], original=ds),
+            'products': declare_field(mds.typing.arrays.Record[Product], original=ps),
+            'perishable': declare_field(mds.typing.arrays.Record[PerishableProduct], filter(lambda x: isinstance(x, PerishableProduct), ps)),
             'recent_purchases': declare_field(mds.typing.composites.Record[RecentPurchases], window_size)  # TODO: Forward args?
         }
 
@@ -565,6 +566,6 @@ def make_basket(n, store, popularity):
             contents[product] = BasketItem(product, 1)
 
     basket = Basket(contents.values())
-    printf("Basket is {}".format(basket))
+    print("Basket is {}".format(basket))
     return basket
 

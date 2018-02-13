@@ -39,4 +39,3 @@ cdef extern from "mpgc/gc.h" namespace "mpgc" nogil:
 
     cdef gc_control_block &control_block()
     cdef void initialize_thread()
-
