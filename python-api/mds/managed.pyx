@@ -409,7 +409,6 @@ cdef class StringArray(MDSArrayBase):
 
 
 # START INJECTION | tmpl_array_primitives(Primitives)
-
 # END INJECTION
 
 # =========================================================================
@@ -678,11 +677,9 @@ cdef class MDSRecordFieldBase(MDSObject):
         return None
 
 # START INJECTION | tmpl_record_field_primitives(Primitives)
-
 # END INJECTION
 
 # START INJECTION | tmpl_record_field_arrays(Arrays)
-
 # END INJECTION
 
 ######################################################################### REFERENCES
@@ -721,11 +718,9 @@ cdef class MDSRecordFieldReferenceBase(MDSObject):
   # }
 
 # START INJECTION | tmpl_record_field_reference_primitives(Primitives)
-
 # END INJECTION
 
 # START INJECTION | tmpl_record_field_reference_arrays(Arrays)
-
 # END INJECTION
 
 ############################################################# RECORD MEMBERS
@@ -767,11 +762,9 @@ cdef class MDSRecordMemberBase(MDSObject):
 
 
 # START INJECTION | tmpl_record_member_primitives(Primitives)
-
 # END INJECTION
 
 # START INJECTION | tmpl_record_member_arrays(Arrays)
-
 # END INJECTION
 
 ######################################################### RECORD TYPE DECLARATIONS
@@ -1514,7 +1507,6 @@ cdef class MDSNameBinding(MDSNameBindingBase):
     def as_type(self, t: MDSTypeInfo) -> MDSTypedNameBinding:
         mappings = {
             # START INJECTION | tmpl_namespace_mapping(Primitives,Arrays,Composites)
-
             # END INJECTION
         }
 
@@ -1578,11 +1570,9 @@ cdef class MDSRecordNameBinding(MDSTypedNameBinding):
 
 
 # START INJECTION | tmpl_namespace_typed_primitive_bindings(Primitives)
-
 # END INJECTION
 
 # START INJECTION | tmpl_namespace_typed_array_bindings(Arrays)
-
 # END INJECTION
 
 # =========================================================================
@@ -1590,5 +1580,4 @@ cdef class MDSRecordNameBinding(MDSTypedNameBinding):
 # =========================================================================
 
 # START INJECTION | tmpl_primitives(Primitives)
-
 # END INJECTION

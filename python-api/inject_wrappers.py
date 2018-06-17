@@ -29,7 +29,8 @@ import sys
 
 from collections import namedtuple
 from itertools import chain
-from typing import Dict, Iterable, List, Text
+from pathlib import Path
+from typing import Callable, Dict, Iterable, List, Text
 
 import mds
 from mds import MDSTypeInfo, MDSPrimitiveTypeInfo, MDSArrayTypeInfo
@@ -40,16 +41,18 @@ TYPE_GROUPINGS = {
     'Arrays': mds.typing.arrays
 }
 
-__ensure_is_list = lambda elem: [elem] if not isinstance(elem, list) else elem
-
 Payload = namedtuple('Payload', ['fn', 'targets'])
 Target = namedtuple('Target', ['start', 'end', 'payload'])
 
 def get_injection_payload(line: Text) -> Payload:
+    """
+    Line is in the form tmpl_<id>([Group1, ...]),
+    this method deconstructs that signature into an injection
+    payload, detailing where and what needs to be generated.
+    """
     line = line.split('|').pop().strip()
-    print(line)
-    # Now line is in the form tmpl_<id>([Group1, ...])
-    # We could use regex, but that seems like too much work.
+    print(f"  {line}")
+
     line = line[:-1]
     fn_name, groups = line.split('(')
     groups = [TYPE_GROUPINGS[t] for t in groups.split(',')]
@@ -59,7 +62,27 @@ def get_injection_payload(line: Text) -> Payload:
         targets=chain(*[x.items() for x in groups])
     )
 
-def find_and_inject(file_path: str, dry_run=True) -> None:
+def dummy_payload(line: Text) -> Payload:
+    """
+    When we're using these mechanisms to take out the injection chunks,
+    we just use a dummy payload with no targets.
+    """
+    def dummy_fn(*args, **kwargs) -> str:
+        return ""
+
+    return Payload(
+        fn=dummy_fn,
+        targets=[]
+    )
+
+def find_and_inject(file_path: Path, dry_run: bool=True, payload_fn: Callable[[str], Payload]=None) -> None:
+    """
+    For a given path, this methid will isolate all the injection points and
+    generate a per-chunk payload given payload_fn.
+    """
+    if not callable(payload_fn):
+        raise RuntimeError("Can't have a non-callable payload function.")
+
     with open(file_path, "r") as fp:
         lines = [l for l in fp]
 
@@ -70,7 +93,7 @@ def find_and_inject(file_path: str, dry_run=True) -> None:
     for i, line in enumerate(lines):
         if "START INJECTION" in line:
             start = i + 1
-            payload = get_injection_payload(line)
+            payload = payload_fn(line)
         elif start is not None and "END INJECTION" in line:
             injection_points.append(
                 Target(start=start, end=i, payload=payload)
@@ -108,24 +131,46 @@ def find_and_inject(file_path: str, dry_run=True) -> None:
         with open(file_path, "w") as fp:
             fp.writelines(chunks)
 
-def generate_and_inject_all_sources(dry_run=True, root=os.getcwd(), exts=('pyx', 'pxd')) -> None:
-    print(f"Injecting Cython Wrappers (simulated={dry_run})")
+def get_all_cython_files(root: Path=Path.cwd(), exts: Iterable[str]=('pyx', 'pxd')) -> List[Path]:
+    """
+    Only Cython files can have this generation (at present), so we exhaustively search through
+    all of them matching the glob for appropriate injection points.
+    """
+    paths = set()
 
-    def get_all_cython_files(root: str, exts: Iterable[str]) -> List[str]:
-        paths = set()
+    for ext in exts:
+        for found in glob.glob(pathname=f"{root}/**/**.{ext}", recursive=True):
+            paths.add(Path(found))
 
-        for ext in exts:
-            for found in glob.glob(pathname=f"{root}/**/**.{ext}", recursive=True):
-                paths.add(found)
+    return sorted(list(paths))
 
-        return sorted(list(paths))
+def generate_and_inject_all_sources(dry_run: bool=True, root: Path=Path.cwd()) -> None:
+    STR_INJ = "Injecting Cython Wrappers"
 
-    for source in get_all_cython_files(root=root, exts=exts):
+    if dry_run:
+        STR_INJ += " [simulated]"
+
+    print(STR_INJ)
+
+    for source in get_all_cython_files(root=root):
         if dry_run:
-            print(f"Evaluating {source}")
+            print(f"  {source}")
+        else:
+            find_and_inject(file_path=source, dry_run=dry_run, payload_fn=get_injection_payload)
 
-        find_and_inject(file_path=source, dry_run=dry_run)
+def clean_injected_components(dry_run: bool=True, root: Path=Path.cwd()) -> None:
+    STR_INJ = "Removing Cython Wrappers"
 
+    if dry_run:
+        STR_INJ += " [simulated]"
+
+    print(STR_INJ)
+
+    for source in get_all_cython_files(root=root):
+        if dry_run:
+            print(f"  {source}")
+        else:
+            find_and_inject(file_path=source, dry_run=dry_run, payload_fn=dummy_payload)
 
 # =========================================================================
 #  Primitives
@@ -650,12 +695,16 @@ def tmpl_array_downcast(t: MDSTypeInfo) -> str:
 #  Run
 # =========================================================================
 
-if __name__ == '__main__':
-    dry_run = False
 
-    for arg in sys.argv:
-        if 'dry' in arg:
-            dry_run = True
-            break
-    
-    generate_and_inject_all_sources(dry_run=dry_run)
+if __name__ == '__main__':
+    import argparse
+
+    parser = argparse.ArgumentParser(description='Deal with the templated wrapper generation.')
+    parser.add_argument('-d', '--dry', action='store_true', help='Dry-run, no changes made.')
+    parser.add_argument('-c', '--clean', action='store_true', help='Clear out any injected components from source files.')
+    args = parser.parse_args()
+
+    if args.clean:
+        clean_injected_components(dry_run=args.dry)
+    else:
+        generate_and_inject_all_sources(dry_run=args.dry)

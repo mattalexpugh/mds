@@ -29,6 +29,7 @@ import sys
 
 from distutils.core import setup
 from distutils.extension import Extension
+from pathlib import Path
 from typing import Text
 from unittest import TestLoader, TestResult
 
@@ -51,24 +52,30 @@ except ImportError:
 
 DEBUG = True  # TODO: Should check this at build time
 
-def find_mds_install_dir() -> Text:
+def find_mds_install_dir(verbose: bool=True) -> Path:
     """
     This finds the root repo where 'mds' and 'mpgc' repos reside, also
     where 'install' will be generated.
     """
     root = os.path.realpath(__file__)
-    print(root)
+
+    if verbose:
+        print(f"Found project root at {root}")
+    
     components = root.split(os.sep)
     repos = os.path.join(os.sep, *components[:-3])
 
     for repo in ('mds', 'mpgc'):
         path = os.path.join(repos, repo)
-        print(path)
+
+        if verbose:
+            print(f"  {repo} => {path}")
+
         assert(os.path.exists(path))
 
-    return repos
+    return Path(repos)
 
-def get_install_dir(repo_dir: Text) -> Text:
+def get_install_dir(repo_dir: Path) -> Path:
     """
     Uses the base repos path found in find_mds_install_dir to locate
     where the libraries to link against should be located. This can be
@@ -79,9 +86,9 @@ def get_install_dir(repo_dir: Text) -> Text:
     else:
         location = os.path.join(*[repo_dir, 'install'])
 
-    return location
+    return Path(location)
 
-def check_and_build_mds_core(install_dir: Text) -> None:
+def check_and_build_mds_core(install_dir: Path) -> None:
     if not os.path.exists(install_dir):
         # TODO: Issue the shell command, deal with the fact we may not be in the
         # same place.
@@ -90,12 +97,12 @@ def check_and_build_mds_core(install_dir: Text) -> None:
 RUN_TESTS = False
 DIR_REPO = find_mds_install_dir()
 DIR_INSTALL = get_install_dir(DIR_REPO)
-DIR_LIB = os.path.join(DIR_INSTALL, 'lib')
+DIR_LIB = DIR_INSTALL / 'lib'
 HEADER_DIRS = [
-    os.path.join(DIR_INSTALL, 'include'),
-    os.path.join(DIR_REPO, 'mds', 'python-api', 'mds', 'include')
+    DIR_INSTALL / 'include',
+    DIR_REPO / 'mds' / 'python-api' / 'mds' / 'include'
 ]
-LIBS = [os.path.join(DIR_LIB, f'lib{l}.a') for l in ['mds_core', 'mpgc', 'ruts']]
+LIBS = [DIR_LIB / f'lib{l}.a' for l in ['mds_core', 'mpgc', 'ruts']]
 ARGS = ['-std=c++14', '-MMD', '-MP', '-fmessage-length=0', '-mcx16']
 UNDEF_MACROS = []
 MDS_PACKAGES = ['managed', 'containers', 'internal']
