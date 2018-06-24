@@ -191,12 +191,12 @@ def tmpl_api_primitives(t: MDSTypeInfo) -> str:
 
     cdef cppclass {t.primitive} "mds::api::managed_type_handle<{t.kind}>":
         {t.primitive}()
-        {t.record_field} field_in(record_type_handle&, h_istring_t&, bool) except+
+        {t.record_field} field_in(h_record_type_t&, h_istring_t&, bool) except+
         uint64_t hash1()
 
     cdef cppclass {t.const_primitive} "mds::api::const_managed_type_handle<{t.kind}>":
         {t.const_primitive}()
-        {t.record_field} field_in(record_type_handle&, h_istring_t&, bool) except+
+        {t.record_field} field_in(h_record_type_t&, h_istring_t&, bool) except+
         uint64_t hash1()
 
     cdef {t.primitive} {t.f_managed_type_handle} "mds::api::managed_type_handle<{t.kind}>"()
@@ -281,7 +281,7 @@ cdef class {t.title_name_binding}(MDSTypedNameBinding):
             {t.primitive} thandle = self._type
             h_namespace_t ns = self._namespace._handle
         try:
-            return {t.title}(h ns.{t.f_lookup}(nhandle, thandle))
+            return {t.title}(ns.{t.f_lookup}(nhandle, thandle))
         except:  # unbound_name_ex
             return None
 
@@ -290,7 +290,7 @@ cdef class {t.title_name_binding}(MDSTypedNameBinding):
             h_istring_t nhandle = self._name._ish
             h_namespace_t ns = self._namespace._handle
 
-        h ns.{t.f_bind}(nhandle, <{t.c_type}> val.python_type)
+        ns.{t.f_bind}(nhandle, <{t.c_type}> val.python_type)
 """
     return compiled
 
@@ -332,10 +332,10 @@ def tmpl_api_records(t: MDSTypeInfo) -> str:
 
     if t.is_arithmetic:
         EXTRA = f"""
-        {t.c_type} add(const managed_record_handle&, {t.c_type})
-        {t.c_type} sub(const managed_record_handle&, {t.c_type})
-        {t.c_type} mul(const managed_record_handle&, {t.c_type})
-        {t.c_type} div(const managed_record_handle&, {t.c_type})
+        {t.c_type} add(h_mrecord_t&, {t.c_type})
+        {t.c_type} sub(h_mrecord_t&, {t.c_type})
+        {t.c_type} mul(h_mrecord_t&, {t.c_type})
+        {t.c_type} div(h_mrecord_t&, {t.c_type})
 """
 
     for prefix in ("", "const_"):
@@ -344,18 +344,18 @@ def tmpl_api_records(t: MDSTypeInfo) -> str:
     cdef cppclass {wrapper_name} "mds::api::{prefix}record_field_handle<{t.kind}>":
         {wrapper_name}()
         {wrapper_name}({wrapper_name}&)
-        {read_val} free_read(const managed_record_handle&)
-        {read_val} frozen_read(const managed_record_handle&)
+        {read_val} free_read(h_mrecord_t&)
+        {read_val} frozen_read(h_mrecord_t&)
 
-        bool has_value(const managed_record_handle&)
-        bool write_initial(const managed_record_handle&,const {t.c_type}&)
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const {t.c_type}&)
         bool is_null()
 
-        {t.c_type} write(const managed_record_handle&, const {t.c_type}&)
+        {t.c_type} write(h_mrecord_t&, const {t.c_type}&)
         h_istring_t name()
         {EXTRA}
-        const_record_type_handle rec_type()
-        #const_type_handle_for<K> field_type()
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
 """
     return compiled
 
@@ -404,7 +404,7 @@ cdef class {t.title_record_field_reference}(MDSRecordFieldReferenceBase):
     def __cinit__(self, {t.title_record_field} field, Record record):
         self._record = record
         self._field_handle = {t.record_field}(field._handle)
-        self._record_handle = managed_record_handle(record._handle)
+        self._record_handle = h_mrecord_t(record._handle)
 
     def read(self):
         cdef {t.c_type} retval = self._field_handle.frozen_read(self._record_handle)
@@ -446,7 +446,7 @@ cdef class {t.title_record_field_reference}(MDSRecordFieldReferenceBase):
     def __cinit__(self, {t.title_record_field} field, Record record):
         self._record = record
         self._field_handle = {t.record_field}(field._handle)
-        self._record_handle = managed_record_handle(record._handle)
+        self._record_handle = h_mrecord_t(record._handle)
 
     def read(self):
         cdef:
@@ -651,7 +651,7 @@ def tmpl_api_arrays(t: MDSTypeInfo) -> str:
         # {t.const_primitive} element_type()
         bool is_same_as(const {t.array}&)
         uint64_t hash1()
-        {t.array_record_field} field_in(record_type_handle&, h_istring_t&, bool) except+
+        {t.array_record_field} field_in(h_record_type_t&, h_istring_t&, bool) except+
 
     cdef cppclass {t.const_array} "mds::api::const_array_type_handle<{t.kind}>":
         {t.const_array}()
@@ -660,7 +660,7 @@ def tmpl_api_arrays(t: MDSTypeInfo) -> str:
         # {t.const_primitive} element_type()
         bool is_same_as(const {t.const_array}&)
         uint64_t hash1()
-        {t.array_record_field} field_in(record_type_handle&, h_istring_t&, bool) except+
+        {t.array_record_field} field_in(h_record_type_t&, h_istring_t&, bool) except+
 
     cdef cppclass {t.managed_array}:
         {t.managed_array}()

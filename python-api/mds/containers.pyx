@@ -293,7 +293,7 @@ cdef class PublicationResult(object):
         if need_task_prepare:
             t1_task = ctxt.top_level_task
 
-            if not __establish_and_run(t1_task, worker, (tasks,)):
+            if not t1_task.establish_and_run(worker, (tasks,)):
                 return False
 
         if not self.prepare_for_redo():
@@ -396,11 +396,16 @@ cdef class IsolationContext(object):
     def __hash__(self):
         return self._handle.hash1()
 
-    def __richcmp__(a, b, op):
-        if op == 2:  # ==
-            return a._handle == b._handle
-        elif op == 3:  # !=
-            return a._handle != b._handle
+    # def __richcmp__(a, Isolatiob, op):
+    #     if not isinstance(b, IsolationContext):
+    #         raise TypeError
+
+    #     cdef h_isoctxt_t other = b._handle
+
+    #     if op == 2:  # ==
+    #         return a._handle == other
+    #     elif op == 3:  # !=
+    #         return a._handle != other
 
     cdef __create_child(self, str kind, bool snapshot):
         cdef:
@@ -460,8 +465,16 @@ cdef class IsolationContext(object):
         return pr
 
     def call(self, fn: Callable, args=tuple()) -> object:
-        cdef Use tc = Use(self._handle)
-        return fn(*args)
+        # cdef Use tc = Use(self._handle)
+        cdef h_isoctxt_t handle = self._handle
+        set_current_task(handle.push_prevailing())
+        
+        cdef: 
+            object fn_return = fn(*args)
+            h_task_t prev_task = h_task_t.pop()
+        
+        set_current_task(prev_task)
+        return fn_return
 
     def run(self, fn: Callable) -> 'IsolationContext':
         self.call(fn)
@@ -475,26 +488,26 @@ cdef class IsolationContext(object):
         return cls.get_current().bind(fn)
 
     def call_isolated__2(self,
-        resolve_opts: ResolveOptions,
-        reports: ReportOptions,
-        fn: Callable,
-        args: Sequence=tuple()
-    ) -> Tuple[Any, Any]:
+            resolve_opts: ResolveOptions,
+            reports: ReportOptions,
+            fn: Callable,
+            args: Sequence=tuple()
+        ) -> Tuple[Any, Any]:
         reports.before_run(self)
         val = self.call(fn, args)
         worked = self.publish(resolve_opts, reports)
         return tuple([val, worked])
     
     def call_isolated__(
-        self,
-        kind: Text, #mt: ModType,
-        bint snapshot, #vt: ViewType,
-        rerun_opts: RerunOptions,
-        resolve_opts: ResolveOptions,
-        reports: ReportOptions,
-        fn: Callable,
-        args=tuple()
-    ) -> Tuple[Any, Any]:
+            self,
+            kind: Text, #mt: ModType,
+            bint snapshot, #vt: ViewType,
+            rerun_opts: RerunOptions,
+            resolve_opts: ResolveOptions,
+            reports: ReportOptions,
+            fn: Callable,
+            args=tuple()
+        ) -> Tuple[Any, Any]:
         masked_fn = fn
         child = self.create_nested(kind, snapshot)
 
@@ -519,15 +532,15 @@ cdef class IsolationContext(object):
         return res
 
     def get_opts_and_call_isolated(
-        self,
-        kind: str,
-        bint snapshot,
-        rerun_opts: RerunOptions,
-        resolve_opts: ResolveOptions,
-        report_opts: ReportOptions,
-        fn: Callable,
-        args=tuple()
-    ):
+            self,
+            kind: str,
+            bint snapshot,
+            rerun_opts: RerunOptions,
+            resolve_opts: ResolveOptions,
+            report_opts: ReportOptions,
+            fn: Callable,
+            args=tuple()
+        ):
         return self.call_isolated__(kind, snapshot, rerun_opts, resolve_opts, report_opts, fn, args)                       
 
     def call_isolated_nothrow(self, fn: Callable, args=tuple(), **kwargs) -> Optional[object]:
@@ -544,7 +557,6 @@ cdef class IsolationContext(object):
             kwargs['snapshot'] = snapshot
 
         return self.get_opts_and_call_isolated('publishable', in_snapshot, rerun, resolve, reports, fn, args, **kwargs)
-
 
     def call_isolated(self, *args, **kwargs) -> Optional[object]:
         res = self.call_isolated_nothrow(*args, **kwargs)
@@ -575,7 +587,7 @@ cdef class IsolationContext(object):
 
     @staticmethod
     def get_current() -> IsolationContext:
-        return IsolationContext_Init(TaskWrapper.get_current().get_context())
+        return IsolationContext_Init(get_current_task().get_context())
 
     @staticmethod
     def get_for_process() -> IsolationContext:
@@ -738,7 +750,7 @@ cdef class Task(object):
         
         if target is not None:
             self._expired = False
-            task = TaskWrapper.get_current().get_context().push_prevailing()
+            task = get_current_task().get_context().push_prevailing()
             self._handle = task
             self._ctxt = self._handle.get_context()
         else:
@@ -806,7 +818,40 @@ cdef class Task(object):
         """
         Call (and return from) any callable object not bound to this Task
         """
-        return __establish_and_run(self, fn, args)
+
+        #   template <typename Fn, typename...Args>
+        #   auto task::establish_and_run(Fn&& fn, Args&&...args) const {
+        #     ensure_thread_initialized();
+        #     _establish c(_handle.push());
+        #     return std::forward<Fn>(fn)(std::forward<Args>(args)...);
+        #   }
+
+        # struct _establish {
+        #   _establish(const task &t) {
+        #     _current() = t;
+        #   }
+        #   ~_establish() {
+        #     _current() = handle_type::pop();
+        #   }
+        # };
+
+        # static task &_current() {
+        #   static thread_local task t = handle_type::default_task();
+        #   return t;
+        # }
+
+        initialize_base_task()
+
+        cdef h_task_t new_handle = self._handle.push()
+
+        set_current_task(new_handle)
+        
+        cdef:
+            object fn_return = fn(*args)
+            h_task_t prev_handle = self._handle.pop()
+
+        set_current_task(prev_handle)
+        return fn_return
 
     def run(self) -> None:
         """
@@ -853,15 +898,14 @@ cdef class Task(object):
         function 'fn' will simply be executed with no attempts for redoing
         being possible.
         """
-        cdef:
-            h_isoctxt_t isoctxt
-
         current_task = Task.get_current()
-        current_isoctxt = current_task.isolation_context
+        
+        cdef:
+            IsolationContext current_isoctxt = current_task.isolation_context
+            h_isoctxt_t isoctxt = current_isoctxt._handle
 
         if current_isoctxt.is_publishable:
             task = Task(fn, args)
-            isoctxt = current_isoctxt._handle
             self._ctxt = isoctxt
             task.run()
         else:
@@ -880,7 +924,7 @@ cdef class Task(object):
         """
         Returns a Task object for the thread-relative current task.
         """
-        return Task_Init(TaskWrapper.get_current()) 
+        return Task_Init(get_current_task()) 
 
     def context(self) -> IsolationContext:  # NOTE: Duplicate of property
         return self.isolation_context

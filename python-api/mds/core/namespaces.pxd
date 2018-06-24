@@ -27,7 +27,7 @@ from libcpp cimport bool
 
 from mds.core.arrays cimport *
 from mds.core.primitives cimport *
-from mds.core.records cimport h_mrecord_t, h_rtype_t
+from mds.core.records cimport h_mrecord_t, h_record_type_t
 from mds.core.strings cimport h_istring_t, h_mstring_t, h_istring_t
 
 cdef extern from "mds_core_api.h" namespace "mds::api" nogil:
@@ -51,7 +51,7 @@ cdef extern from "mds_core_api.h" namespace "mds::api" nogil:
         bool bind_string "bind<mds::api::kind::STRING>"(h_istring_t, h_mstring_t)
         
         h_mrecord_t lookup_record "lookup<false,true>"(h_istring_t, const h_record_type_t&)
-        bool bind_record "bind<mds::api::kind::RECORD>"(h_istring_t, h_rtype_t)
+        bool bind_record "bind<mds::api::kind::RECORD>"(h_istring_t, h_record_type_t)
 
 # START INJECTION | tmpl_api_namespaces_primitives(Primitives)
 # END INJECTION

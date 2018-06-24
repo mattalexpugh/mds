@@ -31,10 +31,14 @@ MDS_PREFIX = "MDS"
 
 
 class MDSTypeInfo():
+    """
+    Base class for the type-mappings between the CAPI and PAPI
+    """
 
     QUALIFIER = ""
 
-    def __init__(self, api: str):
+    def __init__(self, api: Text):
+        # api is the MDS name, the typename you'd use in C++ etc.
         self.api = api
         self.kind = "mds::api::kind::{}".format(api.upper())
         self.title = self._format_title(api.title())
@@ -52,7 +56,7 @@ class MDSTypeInfo():
         self.managed_value = f"mv_{api}"
         self.managed_array = f"h_marray_{api}_t"
         self.record_field = f"h_rfield_{api}_t"
-        self.array_record_field = f"h_rfield_array_{self.api}_t"
+        self.array_record_field = f"h_rfield_array_{api}_t"
 
         # MDS core aliases (masking const templated types)
         self.const_primitive = f"h_c_m{api}_t"
@@ -60,12 +64,12 @@ class MDSTypeInfo():
         self.const_managed_value = f"mv_c_{api}"
         self.const_managed_array = f"h_c_marray_{api}_t"
         self.const_record_field = f"h_c_rfield_{api}_t"
-        self.const_array_record_field = f"h_c_rfield_array_{self.api}_t"
+        self.const_array_record_field = f"h_c_rfield_array_{api}_t"
 
         # MDS Core API functions
         self.f_bind = f"bind_{api}"
         self.f_create_array = f"create_{api}_marray"
-        self.f_create_c_array = f"create_const_{api}_marray"
+        self.f_create_const_array = f"create_const_{api}_marray"
         self.f_bind = f"bind_{api}"
         self.f_bind_array = f"bind_{api}_array"
         self.f_downcast_marray = f"downcast_marray_{api}"
@@ -73,7 +77,7 @@ class MDSTypeInfo():
         self.f_lookup_array = f"lookup_{api}_array"
         self.f_managed_type_handle = f"managed_{api}_type_handle"
         self.f_to_core_val = f"{api}_to_core_val"
-        self.f_c_managed_type_handle = f"const_managed_{api}_type_handle"
+        self.f_const_managed_type_handle = f"const_managed_{api}_type_handle"
 
         # To be overriden
         self.c_type = None
@@ -130,7 +134,7 @@ class MDSPrimitiveTypeInfo(MDSTypeInfo):
     ARRAY = f"{MDS_PREFIX}ArrayBase"
     PRIMITIVE = f"{MDS_PREFIX}PrimitiveBase"
 
-    def __init__(self, c_type, py_type, **kwargs):
+    def __init__(self, c_type: Text, py_type: type, **kwargs):
         super().__init__(**kwargs)
         self.c_type = c_type
         self.py_type_t = py_type
@@ -184,18 +188,19 @@ class MDSRecordTypeInfo(MDSCompositeTypeInfo):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.c_type = "managed_record_handle"
+        self.c_type = "h_mrecord_t"
         self._derived = None
 
     @property
     def derived_record(self) -> type:
         return self._derived
 
+
 class MDSStringTypeInfo(MDSCompositeTypeInfo):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.c_type = "managed_string_handle"
+        self.c_type = "h_mstring_t"
 
 
 class MDSArrayTypeInfo(MDSCompositeTypeInfo):
@@ -233,8 +238,10 @@ class MDSRecordArrayTypeInfo(MDSArrayTypeInfo):
 
 # Public-facing Types
 
-
 class _MDSTypesBase(object):
+    """
+    The base object for exposing API type mappings
+    """
 
     def __init__(self, mappings: Dict[Text, MDSTypeInfo]):
         self.__dict__.update(mappings)
@@ -245,6 +252,9 @@ class _MDSTypesBase(object):
 
 
 class _MDSPrimitiveTypes(_MDSTypesBase):
+    """
+    Primitive types exposed by the MDS core API
+    """
 
     def __init__(self):
         super().__init__({
@@ -262,6 +272,9 @@ class _MDSPrimitiveTypes(_MDSTypesBase):
         })
 
 class _MDSCompositeTypes(_MDSTypesBase):
+    """
+    Composite types are the non-primitive types
+    """
 
     def __init__(self):
         super().__init__({
@@ -271,6 +284,9 @@ class _MDSCompositeTypes(_MDSTypesBase):
 
 
 class _MDSArrayTypes(_MDSTypesBase):
+    """
+    We can have arrays of anything, except arrays.
+    """
 
     def __init__(self):
         data = dict()
@@ -282,6 +298,11 @@ class _MDSArrayTypes(_MDSTypesBase):
 
 
 class _MDSTypes():
+    """
+    This will be the main programming interface to the type hierarchy exposed
+    by MDS core. Through the `typing` value below, an instance of this, developers
+    can access types like mds.typing.primitives.int
+    """
     primitives = _MDSPrimitiveTypes()
     composites = _MDSCompositeTypes()
     arrays = _MDSArrayTypes()

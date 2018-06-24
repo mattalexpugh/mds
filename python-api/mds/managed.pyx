@@ -436,7 +436,7 @@ cdef __RECORD_IDENTS = dict()
 cdef __RECORD_PROXIES = defaultdict(set)
 
 cdef implant_record_handle(Record record, MDSRecordHandleWrapper wrapper):
-    cdef h_c_record_type_t handle = wrapper._handle
+    cdef h_record_type_t handle = wrapper._handle
     record._handle = handle.create_record()
 
 
@@ -475,11 +475,11 @@ cdef class Record(MDSObject):
     def __init__(self):
         self._register_fields()
 
-    def __richcmp__(a, b, op):
-        if op == 2:  # ==
-            return a._handle == b._handle
-        elif op == 3:  # !=
-            return a._handle != b._handle
+    # def __richcmp__(a, b, op):
+    #     if op == 2:  # ==
+    #         return a._handle == b._handle
+    #     elif op == 3:  # !=
+    #         return a._handle != b._handle
 
     @classmethod
     def __init_subclass__(cls, ident: str, **kwargs):
@@ -782,7 +782,7 @@ class MDSRecordFieldDeclaration(object):
 cdef class MDSRecordHandleWrapper(object):
     cdef:
         h_record_type_t _handle
-        h_c_record_type_t _handle
+        # h_c_record_type_t _handle
 
 cdef emplace_handle(h_record_type_t wrapped):
     wrapper = MDSRecordHandleWrapper()
@@ -919,7 +919,7 @@ cdef class String(MDSIndexedObject):
         cdef:
             string s
             int i
-            char_type c
+            char_t c
 
         if isinstance(item, int):
             c = self._handle.at(item)
@@ -991,19 +991,19 @@ cdef class String(MDSIndexedObject):
     def __rmod__(self, other):
         pass
 
-    def __richcmp__(a, b, op):
-        if op == 0:    # <
-            return a._handle < b._handle
-        elif op == 1:  # <=
-            return a._handle <= b._handle
-        elif op == 2:  # ==
-            return a._handle == b._handle
-        elif op == 3:  # !=
-            return a._handle != b._handle
-        elif op == 4:  # >
-            return a._handle > b._handle
-        elif op == 5:  # >=
-            return a._handle >= b._handle
+    # def __richcmp__(a, b, op):
+    #     if op == 0:    # <
+    #         return a._handle < b._handle
+    #     elif op == 1:  # <=
+    #         return a._handle <= b._handle
+    #     elif op == 2:  # ==
+    #         return a._handle == b._handle
+    #     elif op == 3:  # !=
+    #         return a._handle != b._handle
+    #     elif op == 4:  # >
+    #         return a._handle > b._handle
+    #     elif op == 5:  # >=
+    #         return a._handle >= b._handle
 
     def __sizeof__(self):
         return self._handle.size()
@@ -1580,4 +1580,4 @@ cdef class MDSRecordNameBinding(MDSTypedNameBinding):
 # =========================================================================
 
 # START INJECTION | tmpl_primitives(Primitives)
-# END INJECTION
+                                                                                                                                                                                                                                # END INJECTION

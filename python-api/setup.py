@@ -116,10 +116,10 @@ def make_extension(package_identifier):
 
     return Extension(package_identifier,
         sources=[f'{local_path}.pyx'],
-        include_dirs=HEADER_DIRS,
+        include_dirs=[str(path) for path in HEADER_DIRS],
         language='c++',
         extra_compile_args=ARGS,
-        extra_objects=LIBS,
+        extra_objects=[str(path) for path in LIBS],
         undef_macros=UNDEF_MACROS
     )
 
@@ -135,11 +135,15 @@ extensions = [make_extension(f'mds.{e}') for e in MDS_PACKAGES]
 setup(
     name='mds',
     packages=['mds'],
+    version=0.8,
     ext_modules=cythonize(
         extensions,
         language_level=3,
         gdb_debug=DEBUG
-    )
+    ),
+    project_urls={
+        'Source': 'https://github.com/HewlettPackard/mds'
+    }
 )
 
 if RUN_TESTS:

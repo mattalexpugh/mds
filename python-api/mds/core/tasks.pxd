@@ -29,7 +29,7 @@ from libc.stdint cimport uint64_t
 from mds.core.isolation_contexts cimport h_isoctxt_t
 
 cdef extern from "mds_core_api.h" namespace "mds::api" nogil:
-    cdef cppclass h_task_t:
+    cdef cppclass h_task_t "task_handle":
         task_handle()
         
         h_isoctxt_t get_context()
@@ -53,3 +53,8 @@ cdef extern from "mds_core_api.h" namespace "mds::api" nogil:
 
         uint64_t hash1()
         uint64_t hash2()
+
+cdef extern from "helpers.h" namespace "mds::python::tasks" nogil:
+    void        initialize_base_task() 
+    h_task_t    get_current_task()
+    void        set_current_task(h_task_t&)

@@ -70,64 +70,19 @@ namespace mds {
         }
       }
 
-      class TaskWrapper {
-       private:
-        static h_task_t &_current() {
-          static thread_local h_task_t t = h_task_t::default_task();
-          return t;
-        }
-       public:
-        TaskWrapper() = default;
+      h_task_t &_current() {
+        static thread_local h_task_t t = h_task_t::default_task();
+        return t;
+      }
 
-        class Establish {
-         public:
-          Establish() {// This is here to make Cython happy for stack-allocated objects; should never be invoked.
-            throw std::runtime_error("Shouldn't be able to instantiate Establish with no h_task_t");
-          }
+      h_task_t get_current_task() {
+        return _current();
+      }
 
-          Establish(const h_task_t &t) {
-              static size_t counter = 0;  // TODO DELETE 
-            printf("[%lu] _current() - %lu\n", counter, _current().hash1());  // TODO DELETE 
-            _current() = t;
-            printf("[%lu] Establish() - %lu\n", counter++, t.hash1());  // TODO DELETE 
-          }
-
-          ~Establish() {
-            static size_t counter = 0;  // TODO DELETE 
-            printf("[%lu] ~_current() - %lu\n", counter, _current().hash1());  // TODO DELETE 
-            _current() = h_task_t::pop();
-            printf("[%lu] ~Establish() - %lu\n", counter++, _current().hash1());   // TODO DELETE 
-          }
-        };
-
-        static h_task_t default_task() {
-          initialize_base_task();
-          return h_task_t::default_task();
-        }
-
-        static h_task_t get_current() {
-          return _current();
-        }
-
-        static void set_current(h_task_t &other) {
-          _current() = other;
-        }
-      };
+      void set_current_task(h_task_t &other) {
+        _current() = other;
+      }
     } // End mds::python::tasks
-    
-    namespace isoctxts {
-      class Use : tasks::TaskWrapper::Establish {
-       public:
-        Use(h_isoctxt_t &c)
-          : tasks::TaskWrapper::Establish([&c](){
-              ::mds::python::tasks::initialize_base_task();
-              return c.push_prevailing();
-            }()) {}
-        Use() { // This is here to make Cython happy for stack-allocated objects; should never be invoked.
-          throw std::runtime_error("Shouldn't be able to instantiate Use with no h_isoctxt_t");
-        }
-      };
-    } // End mds::python::isoctxt
 
     namespace types {
       #define _ARRAY_ALIAS_(name) h_marray_##name##_t
