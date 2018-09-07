@@ -29,7 +29,7 @@ from libcpp cimport bool
 from mds.core.arrays cimport *
 from mds.core.strings cimport h_istring_t, h_mstring_t
 
-cdef extern from "mds_core_api.h" namespace "mds::api" nogil:
+cdef extern from "helpers.h" namespace "mds::python::types" nogil:
     cdef cppclass h_mrecord_t:
         h_mrecord_t()
         h_mrecord_t(h_mrecord_t&)
@@ -42,7 +42,8 @@ cdef extern from "mds_core_api.h" namespace "mds::api" nogil:
 
         uint64_t hash1()
 
-    cdef cppclass h_record_type_t:
+cdef extern from "mds_core_api.h" namespace "mds::api" nogil:
+    cdef cppclass h_record_type_t "record_type_handle":
         h_record_type_t()
         h_record_type_t(h_record_type_t &)
         h_record_type_t(h_mrecord_t&)
@@ -57,21 +58,21 @@ cdef extern from "mds_core_api.h" namespace "mds::api" nogil:
         bool is_super_of(h_record_type_t&)
         bool operator!=(h_record_type_t&)
 
-        h_c_record_type_t super_type()
-        h_c_record_type_t ensure_created()
+        h_record_type_t super_type()
+        h_record_type_t ensure_created()
 
         @staticmethod
-        h_c_record_type_t find(const h_istring_t&)
+        h_record_type_t find(const h_istring_t&)
 
         @staticmethod
         h_record_type_t declare(const h_istring_t&)
 
         @staticmethod
-        h_record_type_t declare(const h_istring_t&, h_c_record_type_t&)
+        h_record_type_t declare(const h_istring_t&, h_record_type_t&)
 
         uint64_t hash1()
 
-    cdef cppclass h_c_record_type_t:
+    cdef cppclass h_c_record_type_t "const_record_type_handle":
         h_c_record_type_t()
         h_c_record_type_t(h_c_record_type_t &)
         h_c_record_type_t(h_mrecord_t&)
@@ -101,4 +102,936 @@ cdef extern from "mds_core_api.h" namespace "mds::api" nogil:
         uint64_t hash1()
 
 # START INJECTION | tmpl_api_records(Primitives,Composites,Arrays)
+
+    cdef cppclass h_rfield_bool_t "mds::api::record_field_handle<mds::api::kind::BOOL>":
+        h_rfield_bool_t()
+        h_rfield_bool_t(h_rfield_bool_t&)
+        bool free_read(h_mrecord_t&)
+        bool frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const bool&)
+        bool is_null()
+
+        bool write(h_mrecord_t&, const bool&)
+        h_istring_t name()
+        
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_c_rfield_bool_t "mds::api::const_record_field_handle<mds::api::kind::BOOL>":
+        h_c_rfield_bool_t()
+        h_c_rfield_bool_t(h_c_rfield_bool_t&)
+        bool free_read(h_mrecord_t&)
+        bool frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const bool&)
+        bool is_null()
+
+        bool write(h_mrecord_t&, const bool&)
+        h_istring_t name()
+        
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_rfield_byte_t "mds::api::record_field_handle<mds::api::kind::BYTE>":
+        h_rfield_byte_t()
+        h_rfield_byte_t(h_rfield_byte_t&)
+        int8_t free_read(h_mrecord_t&)
+        int8_t frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const int8_t&)
+        bool is_null()
+
+        int8_t write(h_mrecord_t&, const int8_t&)
+        h_istring_t name()
+        
+        int8_t add(h_mrecord_t&, int8_t)
+        int8_t sub(h_mrecord_t&, int8_t)
+        int8_t mul(h_mrecord_t&, int8_t)
+        int8_t div(h_mrecord_t&, int8_t)
+
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_c_rfield_byte_t "mds::api::const_record_field_handle<mds::api::kind::BYTE>":
+        h_c_rfield_byte_t()
+        h_c_rfield_byte_t(h_c_rfield_byte_t&)
+        int8_t free_read(h_mrecord_t&)
+        int8_t frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const int8_t&)
+        bool is_null()
+
+        int8_t write(h_mrecord_t&, const int8_t&)
+        h_istring_t name()
+        
+        int8_t add(h_mrecord_t&, int8_t)
+        int8_t sub(h_mrecord_t&, int8_t)
+        int8_t mul(h_mrecord_t&, int8_t)
+        int8_t div(h_mrecord_t&, int8_t)
+
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_rfield_ubyte_t "mds::api::record_field_handle<mds::api::kind::UBYTE>":
+        h_rfield_ubyte_t()
+        h_rfield_ubyte_t(h_rfield_ubyte_t&)
+        uint8_t free_read(h_mrecord_t&)
+        uint8_t frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const uint8_t&)
+        bool is_null()
+
+        uint8_t write(h_mrecord_t&, const uint8_t&)
+        h_istring_t name()
+        
+        uint8_t add(h_mrecord_t&, uint8_t)
+        uint8_t sub(h_mrecord_t&, uint8_t)
+        uint8_t mul(h_mrecord_t&, uint8_t)
+        uint8_t div(h_mrecord_t&, uint8_t)
+
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_c_rfield_ubyte_t "mds::api::const_record_field_handle<mds::api::kind::UBYTE>":
+        h_c_rfield_ubyte_t()
+        h_c_rfield_ubyte_t(h_c_rfield_ubyte_t&)
+        uint8_t free_read(h_mrecord_t&)
+        uint8_t frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const uint8_t&)
+        bool is_null()
+
+        uint8_t write(h_mrecord_t&, const uint8_t&)
+        h_istring_t name()
+        
+        uint8_t add(h_mrecord_t&, uint8_t)
+        uint8_t sub(h_mrecord_t&, uint8_t)
+        uint8_t mul(h_mrecord_t&, uint8_t)
+        uint8_t div(h_mrecord_t&, uint8_t)
+
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_rfield_short_t "mds::api::record_field_handle<mds::api::kind::SHORT>":
+        h_rfield_short_t()
+        h_rfield_short_t(h_rfield_short_t&)
+        int16_t free_read(h_mrecord_t&)
+        int16_t frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const int16_t&)
+        bool is_null()
+
+        int16_t write(h_mrecord_t&, const int16_t&)
+        h_istring_t name()
+        
+        int16_t add(h_mrecord_t&, int16_t)
+        int16_t sub(h_mrecord_t&, int16_t)
+        int16_t mul(h_mrecord_t&, int16_t)
+        int16_t div(h_mrecord_t&, int16_t)
+
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_c_rfield_short_t "mds::api::const_record_field_handle<mds::api::kind::SHORT>":
+        h_c_rfield_short_t()
+        h_c_rfield_short_t(h_c_rfield_short_t&)
+        int16_t free_read(h_mrecord_t&)
+        int16_t frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const int16_t&)
+        bool is_null()
+
+        int16_t write(h_mrecord_t&, const int16_t&)
+        h_istring_t name()
+        
+        int16_t add(h_mrecord_t&, int16_t)
+        int16_t sub(h_mrecord_t&, int16_t)
+        int16_t mul(h_mrecord_t&, int16_t)
+        int16_t div(h_mrecord_t&, int16_t)
+
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_rfield_ushort_t "mds::api::record_field_handle<mds::api::kind::USHORT>":
+        h_rfield_ushort_t()
+        h_rfield_ushort_t(h_rfield_ushort_t&)
+        uint16_t free_read(h_mrecord_t&)
+        uint16_t frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const uint16_t&)
+        bool is_null()
+
+        uint16_t write(h_mrecord_t&, const uint16_t&)
+        h_istring_t name()
+        
+        uint16_t add(h_mrecord_t&, uint16_t)
+        uint16_t sub(h_mrecord_t&, uint16_t)
+        uint16_t mul(h_mrecord_t&, uint16_t)
+        uint16_t div(h_mrecord_t&, uint16_t)
+
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_c_rfield_ushort_t "mds::api::const_record_field_handle<mds::api::kind::USHORT>":
+        h_c_rfield_ushort_t()
+        h_c_rfield_ushort_t(h_c_rfield_ushort_t&)
+        uint16_t free_read(h_mrecord_t&)
+        uint16_t frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const uint16_t&)
+        bool is_null()
+
+        uint16_t write(h_mrecord_t&, const uint16_t&)
+        h_istring_t name()
+        
+        uint16_t add(h_mrecord_t&, uint16_t)
+        uint16_t sub(h_mrecord_t&, uint16_t)
+        uint16_t mul(h_mrecord_t&, uint16_t)
+        uint16_t div(h_mrecord_t&, uint16_t)
+
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_rfield_int_t "mds::api::record_field_handle<mds::api::kind::INT>":
+        h_rfield_int_t()
+        h_rfield_int_t(h_rfield_int_t&)
+        int32_t free_read(h_mrecord_t&)
+        int32_t frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const int32_t&)
+        bool is_null()
+
+        int32_t write(h_mrecord_t&, const int32_t&)
+        h_istring_t name()
+        
+        int32_t add(h_mrecord_t&, int32_t)
+        int32_t sub(h_mrecord_t&, int32_t)
+        int32_t mul(h_mrecord_t&, int32_t)
+        int32_t div(h_mrecord_t&, int32_t)
+
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_c_rfield_int_t "mds::api::const_record_field_handle<mds::api::kind::INT>":
+        h_c_rfield_int_t()
+        h_c_rfield_int_t(h_c_rfield_int_t&)
+        int32_t free_read(h_mrecord_t&)
+        int32_t frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const int32_t&)
+        bool is_null()
+
+        int32_t write(h_mrecord_t&, const int32_t&)
+        h_istring_t name()
+        
+        int32_t add(h_mrecord_t&, int32_t)
+        int32_t sub(h_mrecord_t&, int32_t)
+        int32_t mul(h_mrecord_t&, int32_t)
+        int32_t div(h_mrecord_t&, int32_t)
+
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_rfield_uint_t "mds::api::record_field_handle<mds::api::kind::UINT>":
+        h_rfield_uint_t()
+        h_rfield_uint_t(h_rfield_uint_t&)
+        uint32_t free_read(h_mrecord_t&)
+        uint32_t frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const uint32_t&)
+        bool is_null()
+
+        uint32_t write(h_mrecord_t&, const uint32_t&)
+        h_istring_t name()
+        
+        uint32_t add(h_mrecord_t&, uint32_t)
+        uint32_t sub(h_mrecord_t&, uint32_t)
+        uint32_t mul(h_mrecord_t&, uint32_t)
+        uint32_t div(h_mrecord_t&, uint32_t)
+
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_c_rfield_uint_t "mds::api::const_record_field_handle<mds::api::kind::UINT>":
+        h_c_rfield_uint_t()
+        h_c_rfield_uint_t(h_c_rfield_uint_t&)
+        uint32_t free_read(h_mrecord_t&)
+        uint32_t frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const uint32_t&)
+        bool is_null()
+
+        uint32_t write(h_mrecord_t&, const uint32_t&)
+        h_istring_t name()
+        
+        uint32_t add(h_mrecord_t&, uint32_t)
+        uint32_t sub(h_mrecord_t&, uint32_t)
+        uint32_t mul(h_mrecord_t&, uint32_t)
+        uint32_t div(h_mrecord_t&, uint32_t)
+
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_rfield_long_t "mds::api::record_field_handle<mds::api::kind::LONG>":
+        h_rfield_long_t()
+        h_rfield_long_t(h_rfield_long_t&)
+        int64_t free_read(h_mrecord_t&)
+        int64_t frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const int64_t&)
+        bool is_null()
+
+        int64_t write(h_mrecord_t&, const int64_t&)
+        h_istring_t name()
+        
+        int64_t add(h_mrecord_t&, int64_t)
+        int64_t sub(h_mrecord_t&, int64_t)
+        int64_t mul(h_mrecord_t&, int64_t)
+        int64_t div(h_mrecord_t&, int64_t)
+
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_c_rfield_long_t "mds::api::const_record_field_handle<mds::api::kind::LONG>":
+        h_c_rfield_long_t()
+        h_c_rfield_long_t(h_c_rfield_long_t&)
+        int64_t free_read(h_mrecord_t&)
+        int64_t frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const int64_t&)
+        bool is_null()
+
+        int64_t write(h_mrecord_t&, const int64_t&)
+        h_istring_t name()
+        
+        int64_t add(h_mrecord_t&, int64_t)
+        int64_t sub(h_mrecord_t&, int64_t)
+        int64_t mul(h_mrecord_t&, int64_t)
+        int64_t div(h_mrecord_t&, int64_t)
+
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_rfield_ulong_t "mds::api::record_field_handle<mds::api::kind::ULONG>":
+        h_rfield_ulong_t()
+        h_rfield_ulong_t(h_rfield_ulong_t&)
+        uint64_t free_read(h_mrecord_t&)
+        uint64_t frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const uint64_t&)
+        bool is_null()
+
+        uint64_t write(h_mrecord_t&, const uint64_t&)
+        h_istring_t name()
+        
+        uint64_t add(h_mrecord_t&, uint64_t)
+        uint64_t sub(h_mrecord_t&, uint64_t)
+        uint64_t mul(h_mrecord_t&, uint64_t)
+        uint64_t div(h_mrecord_t&, uint64_t)
+
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_c_rfield_ulong_t "mds::api::const_record_field_handle<mds::api::kind::ULONG>":
+        h_c_rfield_ulong_t()
+        h_c_rfield_ulong_t(h_c_rfield_ulong_t&)
+        uint64_t free_read(h_mrecord_t&)
+        uint64_t frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const uint64_t&)
+        bool is_null()
+
+        uint64_t write(h_mrecord_t&, const uint64_t&)
+        h_istring_t name()
+        
+        uint64_t add(h_mrecord_t&, uint64_t)
+        uint64_t sub(h_mrecord_t&, uint64_t)
+        uint64_t mul(h_mrecord_t&, uint64_t)
+        uint64_t div(h_mrecord_t&, uint64_t)
+
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_rfield_float_t "mds::api::record_field_handle<mds::api::kind::FLOAT>":
+        h_rfield_float_t()
+        h_rfield_float_t(h_rfield_float_t&)
+        float free_read(h_mrecord_t&)
+        float frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const float&)
+        bool is_null()
+
+        float write(h_mrecord_t&, const float&)
+        h_istring_t name()
+        
+        float add(h_mrecord_t&, float)
+        float sub(h_mrecord_t&, float)
+        float mul(h_mrecord_t&, float)
+        float div(h_mrecord_t&, float)
+
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_c_rfield_float_t "mds::api::const_record_field_handle<mds::api::kind::FLOAT>":
+        h_c_rfield_float_t()
+        h_c_rfield_float_t(h_c_rfield_float_t&)
+        float free_read(h_mrecord_t&)
+        float frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const float&)
+        bool is_null()
+
+        float write(h_mrecord_t&, const float&)
+        h_istring_t name()
+        
+        float add(h_mrecord_t&, float)
+        float sub(h_mrecord_t&, float)
+        float mul(h_mrecord_t&, float)
+        float div(h_mrecord_t&, float)
+
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_rfield_double_t "mds::api::record_field_handle<mds::api::kind::DOUBLE>":
+        h_rfield_double_t()
+        h_rfield_double_t(h_rfield_double_t&)
+        double free_read(h_mrecord_t&)
+        double frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const double&)
+        bool is_null()
+
+        double write(h_mrecord_t&, const double&)
+        h_istring_t name()
+        
+        double add(h_mrecord_t&, double)
+        double sub(h_mrecord_t&, double)
+        double mul(h_mrecord_t&, double)
+        double div(h_mrecord_t&, double)
+
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_c_rfield_double_t "mds::api::const_record_field_handle<mds::api::kind::DOUBLE>":
+        h_c_rfield_double_t()
+        h_c_rfield_double_t(h_c_rfield_double_t&)
+        double free_read(h_mrecord_t&)
+        double frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const double&)
+        bool is_null()
+
+        double write(h_mrecord_t&, const double&)
+        h_istring_t name()
+        
+        double add(h_mrecord_t&, double)
+        double sub(h_mrecord_t&, double)
+        double mul(h_mrecord_t&, double)
+        double div(h_mrecord_t&, double)
+
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_rfield_string_t "mds::api::record_field_handle<mds::api::kind::STRING>":
+        h_rfield_string_t()
+        h_rfield_string_t(h_rfield_string_t&)
+        h_mstring_t free_read(h_mrecord_t&)
+        h_mstring_t frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const h_mstring_t&)
+        bool is_null()
+
+        h_mstring_t write(h_mrecord_t&, const h_mstring_t&)
+        h_istring_t name()
+        
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_c_rfield_string_t "mds::api::const_record_field_handle<mds::api::kind::STRING>":
+        h_c_rfield_string_t()
+        h_c_rfield_string_t(h_c_rfield_string_t&)
+        h_mstring_t free_read(h_mrecord_t&)
+        h_mstring_t frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const h_mstring_t&)
+        bool is_null()
+
+        h_mstring_t write(h_mrecord_t&, const h_mstring_t&)
+        h_istring_t name()
+        
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_rfield_record_t "mds::api::record_field_handle<mds::api::kind::RECORD>":
+        h_rfield_record_t()
+        h_rfield_record_t(h_rfield_record_t&)
+        h_mrecord_t free_read(h_mrecord_t&)
+        h_mrecord_t frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const h_mrecord_t&)
+        bool is_null()
+
+        h_mrecord_t write(h_mrecord_t&, const h_mrecord_t&)
+        h_istring_t name()
+        
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_c_rfield_record_t "mds::api::const_record_field_handle<mds::api::kind::RECORD>":
+        h_c_rfield_record_t()
+        h_c_rfield_record_t(h_c_rfield_record_t&)
+        h_mrecord_t free_read(h_mrecord_t&)
+        h_mrecord_t frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const h_mrecord_t&)
+        bool is_null()
+
+        h_mrecord_t write(h_mrecord_t&, const h_mrecord_t&)
+        h_istring_t name()
+        
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_rfield_array_bool_t "mds::api::record_field_handle<mds::api::kind::ARRAY>":
+        h_rfield_array_bool_t()
+        h_rfield_array_bool_t(h_rfield_array_bool_t&)
+        h_marray_base_t free_read(h_mrecord_t&)
+        h_marray_base_t frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const h_marray_bool_t&)
+        bool is_null()
+
+        h_marray_bool_t write(h_mrecord_t&, const h_marray_bool_t&)
+        h_istring_t name()
+        
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_c_rfield_array_bool_t "mds::api::const_record_field_handle<mds::api::kind::ARRAY>":
+        h_c_rfield_array_bool_t()
+        h_c_rfield_array_bool_t(h_c_rfield_array_bool_t&)
+        h_marray_base_t free_read(h_mrecord_t&)
+        h_marray_base_t frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const h_marray_bool_t&)
+        bool is_null()
+
+        h_marray_bool_t write(h_mrecord_t&, const h_marray_bool_t&)
+        h_istring_t name()
+        
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_rfield_array_byte_t "mds::api::record_field_handle<mds::api::kind::ARRAY>":
+        h_rfield_array_byte_t()
+        h_rfield_array_byte_t(h_rfield_array_byte_t&)
+        h_marray_base_t free_read(h_mrecord_t&)
+        h_marray_base_t frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const h_marray_byte_t&)
+        bool is_null()
+
+        h_marray_byte_t write(h_mrecord_t&, const h_marray_byte_t&)
+        h_istring_t name()
+        
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_c_rfield_array_byte_t "mds::api::const_record_field_handle<mds::api::kind::ARRAY>":
+        h_c_rfield_array_byte_t()
+        h_c_rfield_array_byte_t(h_c_rfield_array_byte_t&)
+        h_marray_base_t free_read(h_mrecord_t&)
+        h_marray_base_t frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const h_marray_byte_t&)
+        bool is_null()
+
+        h_marray_byte_t write(h_mrecord_t&, const h_marray_byte_t&)
+        h_istring_t name()
+        
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_rfield_array_ubyte_t "mds::api::record_field_handle<mds::api::kind::ARRAY>":
+        h_rfield_array_ubyte_t()
+        h_rfield_array_ubyte_t(h_rfield_array_ubyte_t&)
+        h_marray_base_t free_read(h_mrecord_t&)
+        h_marray_base_t frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const h_marray_ubyte_t&)
+        bool is_null()
+
+        h_marray_ubyte_t write(h_mrecord_t&, const h_marray_ubyte_t&)
+        h_istring_t name()
+        
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_c_rfield_array_ubyte_t "mds::api::const_record_field_handle<mds::api::kind::ARRAY>":
+        h_c_rfield_array_ubyte_t()
+        h_c_rfield_array_ubyte_t(h_c_rfield_array_ubyte_t&)
+        h_marray_base_t free_read(h_mrecord_t&)
+        h_marray_base_t frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const h_marray_ubyte_t&)
+        bool is_null()
+
+        h_marray_ubyte_t write(h_mrecord_t&, const h_marray_ubyte_t&)
+        h_istring_t name()
+        
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_rfield_array_short_t "mds::api::record_field_handle<mds::api::kind::ARRAY>":
+        h_rfield_array_short_t()
+        h_rfield_array_short_t(h_rfield_array_short_t&)
+        h_marray_base_t free_read(h_mrecord_t&)
+        h_marray_base_t frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const h_marray_short_t&)
+        bool is_null()
+
+        h_marray_short_t write(h_mrecord_t&, const h_marray_short_t&)
+        h_istring_t name()
+        
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_c_rfield_array_short_t "mds::api::const_record_field_handle<mds::api::kind::ARRAY>":
+        h_c_rfield_array_short_t()
+        h_c_rfield_array_short_t(h_c_rfield_array_short_t&)
+        h_marray_base_t free_read(h_mrecord_t&)
+        h_marray_base_t frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const h_marray_short_t&)
+        bool is_null()
+
+        h_marray_short_t write(h_mrecord_t&, const h_marray_short_t&)
+        h_istring_t name()
+        
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_rfield_array_ushort_t "mds::api::record_field_handle<mds::api::kind::ARRAY>":
+        h_rfield_array_ushort_t()
+        h_rfield_array_ushort_t(h_rfield_array_ushort_t&)
+        h_marray_base_t free_read(h_mrecord_t&)
+        h_marray_base_t frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const h_marray_ushort_t&)
+        bool is_null()
+
+        h_marray_ushort_t write(h_mrecord_t&, const h_marray_ushort_t&)
+        h_istring_t name()
+        
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_c_rfield_array_ushort_t "mds::api::const_record_field_handle<mds::api::kind::ARRAY>":
+        h_c_rfield_array_ushort_t()
+        h_c_rfield_array_ushort_t(h_c_rfield_array_ushort_t&)
+        h_marray_base_t free_read(h_mrecord_t&)
+        h_marray_base_t frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const h_marray_ushort_t&)
+        bool is_null()
+
+        h_marray_ushort_t write(h_mrecord_t&, const h_marray_ushort_t&)
+        h_istring_t name()
+        
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_rfield_array_int_t "mds::api::record_field_handle<mds::api::kind::ARRAY>":
+        h_rfield_array_int_t()
+        h_rfield_array_int_t(h_rfield_array_int_t&)
+        h_marray_base_t free_read(h_mrecord_t&)
+        h_marray_base_t frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const h_marray_int_t&)
+        bool is_null()
+
+        h_marray_int_t write(h_mrecord_t&, const h_marray_int_t&)
+        h_istring_t name()
+        
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_c_rfield_array_int_t "mds::api::const_record_field_handle<mds::api::kind::ARRAY>":
+        h_c_rfield_array_int_t()
+        h_c_rfield_array_int_t(h_c_rfield_array_int_t&)
+        h_marray_base_t free_read(h_mrecord_t&)
+        h_marray_base_t frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const h_marray_int_t&)
+        bool is_null()
+
+        h_marray_int_t write(h_mrecord_t&, const h_marray_int_t&)
+        h_istring_t name()
+        
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_rfield_array_uint_t "mds::api::record_field_handle<mds::api::kind::ARRAY>":
+        h_rfield_array_uint_t()
+        h_rfield_array_uint_t(h_rfield_array_uint_t&)
+        h_marray_base_t free_read(h_mrecord_t&)
+        h_marray_base_t frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const h_marray_uint_t&)
+        bool is_null()
+
+        h_marray_uint_t write(h_mrecord_t&, const h_marray_uint_t&)
+        h_istring_t name()
+        
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_c_rfield_array_uint_t "mds::api::const_record_field_handle<mds::api::kind::ARRAY>":
+        h_c_rfield_array_uint_t()
+        h_c_rfield_array_uint_t(h_c_rfield_array_uint_t&)
+        h_marray_base_t free_read(h_mrecord_t&)
+        h_marray_base_t frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const h_marray_uint_t&)
+        bool is_null()
+
+        h_marray_uint_t write(h_mrecord_t&, const h_marray_uint_t&)
+        h_istring_t name()
+        
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_rfield_array_long_t "mds::api::record_field_handle<mds::api::kind::ARRAY>":
+        h_rfield_array_long_t()
+        h_rfield_array_long_t(h_rfield_array_long_t&)
+        h_marray_base_t free_read(h_mrecord_t&)
+        h_marray_base_t frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const h_marray_long_t&)
+        bool is_null()
+
+        h_marray_long_t write(h_mrecord_t&, const h_marray_long_t&)
+        h_istring_t name()
+        
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_c_rfield_array_long_t "mds::api::const_record_field_handle<mds::api::kind::ARRAY>":
+        h_c_rfield_array_long_t()
+        h_c_rfield_array_long_t(h_c_rfield_array_long_t&)
+        h_marray_base_t free_read(h_mrecord_t&)
+        h_marray_base_t frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const h_marray_long_t&)
+        bool is_null()
+
+        h_marray_long_t write(h_mrecord_t&, const h_marray_long_t&)
+        h_istring_t name()
+        
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_rfield_array_ulong_t "mds::api::record_field_handle<mds::api::kind::ARRAY>":
+        h_rfield_array_ulong_t()
+        h_rfield_array_ulong_t(h_rfield_array_ulong_t&)
+        h_marray_base_t free_read(h_mrecord_t&)
+        h_marray_base_t frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const h_marray_ulong_t&)
+        bool is_null()
+
+        h_marray_ulong_t write(h_mrecord_t&, const h_marray_ulong_t&)
+        h_istring_t name()
+        
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_c_rfield_array_ulong_t "mds::api::const_record_field_handle<mds::api::kind::ARRAY>":
+        h_c_rfield_array_ulong_t()
+        h_c_rfield_array_ulong_t(h_c_rfield_array_ulong_t&)
+        h_marray_base_t free_read(h_mrecord_t&)
+        h_marray_base_t frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const h_marray_ulong_t&)
+        bool is_null()
+
+        h_marray_ulong_t write(h_mrecord_t&, const h_marray_ulong_t&)
+        h_istring_t name()
+        
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_rfield_array_float_t "mds::api::record_field_handle<mds::api::kind::ARRAY>":
+        h_rfield_array_float_t()
+        h_rfield_array_float_t(h_rfield_array_float_t&)
+        h_marray_base_t free_read(h_mrecord_t&)
+        h_marray_base_t frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const h_marray_float_t&)
+        bool is_null()
+
+        h_marray_float_t write(h_mrecord_t&, const h_marray_float_t&)
+        h_istring_t name()
+        
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_c_rfield_array_float_t "mds::api::const_record_field_handle<mds::api::kind::ARRAY>":
+        h_c_rfield_array_float_t()
+        h_c_rfield_array_float_t(h_c_rfield_array_float_t&)
+        h_marray_base_t free_read(h_mrecord_t&)
+        h_marray_base_t frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const h_marray_float_t&)
+        bool is_null()
+
+        h_marray_float_t write(h_mrecord_t&, const h_marray_float_t&)
+        h_istring_t name()
+        
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_rfield_array_double_t "mds::api::record_field_handle<mds::api::kind::ARRAY>":
+        h_rfield_array_double_t()
+        h_rfield_array_double_t(h_rfield_array_double_t&)
+        h_marray_base_t free_read(h_mrecord_t&)
+        h_marray_base_t frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const h_marray_double_t&)
+        bool is_null()
+
+        h_marray_double_t write(h_mrecord_t&, const h_marray_double_t&)
+        h_istring_t name()
+        
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_c_rfield_array_double_t "mds::api::const_record_field_handle<mds::api::kind::ARRAY>":
+        h_c_rfield_array_double_t()
+        h_c_rfield_array_double_t(h_c_rfield_array_double_t&)
+        h_marray_base_t free_read(h_mrecord_t&)
+        h_marray_base_t frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const h_marray_double_t&)
+        bool is_null()
+
+        h_marray_double_t write(h_mrecord_t&, const h_marray_double_t&)
+        h_istring_t name()
+        
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_rfield_array_string_t "mds::api::record_field_handle<mds::api::kind::ARRAY>":
+        h_rfield_array_string_t()
+        h_rfield_array_string_t(h_rfield_array_string_t&)
+        h_marray_base_t free_read(h_mrecord_t&)
+        h_marray_base_t frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const h_marray_string_t&)
+        bool is_null()
+
+        h_marray_string_t write(h_mrecord_t&, const h_marray_string_t&)
+        h_istring_t name()
+        
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_c_rfield_array_string_t "mds::api::const_record_field_handle<mds::api::kind::ARRAY>":
+        h_c_rfield_array_string_t()
+        h_c_rfield_array_string_t(h_c_rfield_array_string_t&)
+        h_marray_base_t free_read(h_mrecord_t&)
+        h_marray_base_t frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const h_marray_string_t&)
+        bool is_null()
+
+        h_marray_string_t write(h_mrecord_t&, const h_marray_string_t&)
+        h_istring_t name()
+        
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_rfield_array_record_t "mds::api::record_field_handle<mds::api::kind::ARRAY>":
+        h_rfield_array_record_t()
+        h_rfield_array_record_t(h_rfield_array_record_t&)
+        h_marray_base_t free_read(h_mrecord_t&)
+        h_marray_base_t frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const h_marray_record_t&)
+        bool is_null()
+
+        h_marray_record_t write(h_mrecord_t&, const h_marray_record_t&)
+        h_istring_t name()
+        
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
+
+    cdef cppclass h_c_rfield_array_record_t "mds::api::const_record_field_handle<mds::api::kind::ARRAY>":
+        h_c_rfield_array_record_t()
+        h_c_rfield_array_record_t(h_c_rfield_array_record_t&)
+        h_marray_base_t free_read(h_mrecord_t&)
+        h_marray_base_t frozen_read(h_mrecord_t&)
+
+        bool has_value(h_mrecord_t&)
+        bool write_initial(h_mrecord_t&,const h_marray_record_t&)
+        bool is_null()
+
+        h_marray_record_t write(h_mrecord_t&, const h_marray_record_t&)
+        h_istring_t name()
+        
+        h_record_type_t rec_type()
+        #h_record_type_t<K> field_type()
 # END INJECTION

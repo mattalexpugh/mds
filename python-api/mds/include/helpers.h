@@ -89,10 +89,10 @@ namespace mds {
       #define _CONST_ARRAY_ALIAS_(name) h_const_marray_##name##_t
       #define _MTYPE_HANDLE_(K) mds::api::managed_type_handle_cp<K, false>
       #define _CONST_MTYPE_HANDLE_(K) mds::api::managed_type_handle_cp<K, true>
-      #define _MRECORD_HANDLE_ managed_record_handle_cp<false>
-      #define _CONST_MRECORD_HANDLE_ managed_record_handle_cp<true>
-      #define _MSTRING_HANDLE_ managed_string_handle_cp<false>
-      #define _CONST_MSTRING_HANDLE_ managed_string_handle_cp<true>
+      #define _MRECORD_HANDLE_ mds::api::managed_record_handle_cp<false>
+      #define _CONST_MRECORD_HANDLE_ mds::api::managed_record_handle_cp<true>
+      #define _MSTRING_HANDLE_ mds::api::managed_string_handle_cp<false>
+      #define _CONST_MSTRING_HANDLE_ mds::api::managed_string_handle_cp<true>
       #define _TYPE_WRAPPER_(K, name, handle) \
       using _ARRAY_ALIAS_(name) = mds::api::managed_array_handle<K>; \
       using _CONST_ARRAY_ALIAS_(name) = mds::api::const_managed_array_handle<K>; \

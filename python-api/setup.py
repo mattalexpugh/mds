@@ -140,10 +140,7 @@ setup(
         extensions,
         language_level=3,
         gdb_debug=DEBUG
-    ),
-    project_urls={
-        'Source': 'https://github.com/HewlettPackard/mds'
-    }
+    )
 )
 
 if RUN_TESTS:

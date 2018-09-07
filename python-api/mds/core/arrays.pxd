@@ -38,7 +38,603 @@ cdef extern from "helpers.h":  # This is managed_array_base_type, only works lik
 
 cdef extern from "helpers.h" namespace "mds::python::types":
 # START INJECTION | tmpl_api_arrays(Primitives,Composites)
+
+    cdef cppclass h_array_bool_t "mds::api::array_type_handle<mds::api::kind::BOOL>":
+        h_array_bool_t()
+        h_array_bool_t(h_array_bool_t&)
+        h_marray_bool_t create_array(size_t)
+        # h_c_mbool_t element_type()
+        bool is_same_as(const h_array_bool_t&)
+        uint64_t hash1()
+        h_rfield_array_bool_t field_in(h_record_type_t&, h_istring_t&, bool) except+
+
+    cdef cppclass h_c_array_bool_t "mds::api::const_array_type_handle<mds::api::kind::BOOL>":
+        h_c_array_bool_t()
+        h_c_array_bool_t(h_c_array_bool_t&)
+        h_marray_bool_t create_array(size_t)
+        # h_c_mbool_t element_type()
+        bool is_same_as(const h_c_array_bool_t&)
+        uint64_t hash1()
+        h_rfield_array_bool_t field_in(h_record_type_t&, h_istring_t&, bool) except+
+
+    cdef cppclass h_marray_bool_t:
+        h_marray_bool_t()
+        h_marray_bool_t(h_marray_bool_t&)
+        mv_bool frozen_read(size_t)
+        mv_bool write(size_t, mv_bool)
+        size_t size()
+        bool has_value()
+        h_marray_base_t as_base()
+        uint64_t hash1()
+        
+    cdef cppclass h_c_marray_bool_t:
+        h_c_marray_bool_t()
+        h_c_marray_bool_t(h_marray_bool_t&)
+        mv_bool frozen_read(size_t)
+        mv_bool write(size_t, mv_bool)
+        size_t size()
+        bool has_value()
+        h_marray_base_t as_base()
+        uint64_t hash1()
+
+    h_marray_bool_t create_bool_marray(size_t)
+    h_c_marray_bool_t create_const_bool_marray(size_t)    
+
+    cdef cppclass h_array_byte_t "mds::api::array_type_handle<mds::api::kind::BYTE>":
+        h_array_byte_t()
+        h_array_byte_t(h_array_byte_t&)
+        h_marray_byte_t create_array(size_t)
+        # h_c_mbyte_t element_type()
+        bool is_same_as(const h_array_byte_t&)
+        uint64_t hash1()
+        h_rfield_array_byte_t field_in(h_record_type_t&, h_istring_t&, bool) except+
+
+    cdef cppclass h_c_array_byte_t "mds::api::const_array_type_handle<mds::api::kind::BYTE>":
+        h_c_array_byte_t()
+        h_c_array_byte_t(h_c_array_byte_t&)
+        h_marray_byte_t create_array(size_t)
+        # h_c_mbyte_t element_type()
+        bool is_same_as(const h_c_array_byte_t&)
+        uint64_t hash1()
+        h_rfield_array_byte_t field_in(h_record_type_t&, h_istring_t&, bool) except+
+
+    cdef cppclass h_marray_byte_t:
+        h_marray_byte_t()
+        h_marray_byte_t(h_marray_byte_t&)
+        mv_byte frozen_read(size_t)
+        mv_byte write(size_t, mv_byte)
+        size_t size()
+        bool has_value()
+        h_marray_base_t as_base()
+        uint64_t hash1()
+        
+        int8_t add(const size_t&, const int8_t&)
+        int8_t sub(const size_t&, const int8_t&)
+        int8_t mul(const size_t&, const int8_t&)
+        int8_t div(const size_t&, const int8_t&)
+
+    cdef cppclass h_c_marray_byte_t:
+        h_c_marray_byte_t()
+        h_c_marray_byte_t(h_marray_byte_t&)
+        mv_byte frozen_read(size_t)
+        mv_byte write(size_t, mv_byte)
+        size_t size()
+        bool has_value()
+        h_marray_base_t as_base()
+        uint64_t hash1()
+
+    h_marray_byte_t create_byte_marray(size_t)
+    h_c_marray_byte_t create_const_byte_marray(size_t)    
+
+    cdef cppclass h_array_ubyte_t "mds::api::array_type_handle<mds::api::kind::UBYTE>":
+        h_array_ubyte_t()
+        h_array_ubyte_t(h_array_ubyte_t&)
+        h_marray_ubyte_t create_array(size_t)
+        # h_c_mubyte_t element_type()
+        bool is_same_as(const h_array_ubyte_t&)
+        uint64_t hash1()
+        h_rfield_array_ubyte_t field_in(h_record_type_t&, h_istring_t&, bool) except+
+
+    cdef cppclass h_c_array_ubyte_t "mds::api::const_array_type_handle<mds::api::kind::UBYTE>":
+        h_c_array_ubyte_t()
+        h_c_array_ubyte_t(h_c_array_ubyte_t&)
+        h_marray_ubyte_t create_array(size_t)
+        # h_c_mubyte_t element_type()
+        bool is_same_as(const h_c_array_ubyte_t&)
+        uint64_t hash1()
+        h_rfield_array_ubyte_t field_in(h_record_type_t&, h_istring_t&, bool) except+
+
+    cdef cppclass h_marray_ubyte_t:
+        h_marray_ubyte_t()
+        h_marray_ubyte_t(h_marray_ubyte_t&)
+        mv_ubyte frozen_read(size_t)
+        mv_ubyte write(size_t, mv_ubyte)
+        size_t size()
+        bool has_value()
+        h_marray_base_t as_base()
+        uint64_t hash1()
+        
+        uint8_t add(const size_t&, const uint8_t&)
+        uint8_t sub(const size_t&, const uint8_t&)
+        uint8_t mul(const size_t&, const uint8_t&)
+        uint8_t div(const size_t&, const uint8_t&)
+
+    cdef cppclass h_c_marray_ubyte_t:
+        h_c_marray_ubyte_t()
+        h_c_marray_ubyte_t(h_marray_ubyte_t&)
+        mv_ubyte frozen_read(size_t)
+        mv_ubyte write(size_t, mv_ubyte)
+        size_t size()
+        bool has_value()
+        h_marray_base_t as_base()
+        uint64_t hash1()
+
+    h_marray_ubyte_t create_ubyte_marray(size_t)
+    h_c_marray_ubyte_t create_const_ubyte_marray(size_t)    
+
+    cdef cppclass h_array_short_t "mds::api::array_type_handle<mds::api::kind::SHORT>":
+        h_array_short_t()
+        h_array_short_t(h_array_short_t&)
+        h_marray_short_t create_array(size_t)
+        # h_c_mshort_t element_type()
+        bool is_same_as(const h_array_short_t&)
+        uint64_t hash1()
+        h_rfield_array_short_t field_in(h_record_type_t&, h_istring_t&, bool) except+
+
+    cdef cppclass h_c_array_short_t "mds::api::const_array_type_handle<mds::api::kind::SHORT>":
+        h_c_array_short_t()
+        h_c_array_short_t(h_c_array_short_t&)
+        h_marray_short_t create_array(size_t)
+        # h_c_mshort_t element_type()
+        bool is_same_as(const h_c_array_short_t&)
+        uint64_t hash1()
+        h_rfield_array_short_t field_in(h_record_type_t&, h_istring_t&, bool) except+
+
+    cdef cppclass h_marray_short_t:
+        h_marray_short_t()
+        h_marray_short_t(h_marray_short_t&)
+        mv_short frozen_read(size_t)
+        mv_short write(size_t, mv_short)
+        size_t size()
+        bool has_value()
+        h_marray_base_t as_base()
+        uint64_t hash1()
+        
+        int16_t add(const size_t&, const int16_t&)
+        int16_t sub(const size_t&, const int16_t&)
+        int16_t mul(const size_t&, const int16_t&)
+        int16_t div(const size_t&, const int16_t&)
+
+    cdef cppclass h_c_marray_short_t:
+        h_c_marray_short_t()
+        h_c_marray_short_t(h_marray_short_t&)
+        mv_short frozen_read(size_t)
+        mv_short write(size_t, mv_short)
+        size_t size()
+        bool has_value()
+        h_marray_base_t as_base()
+        uint64_t hash1()
+
+    h_marray_short_t create_short_marray(size_t)
+    h_c_marray_short_t create_const_short_marray(size_t)    
+
+    cdef cppclass h_array_ushort_t "mds::api::array_type_handle<mds::api::kind::USHORT>":
+        h_array_ushort_t()
+        h_array_ushort_t(h_array_ushort_t&)
+        h_marray_ushort_t create_array(size_t)
+        # h_c_mushort_t element_type()
+        bool is_same_as(const h_array_ushort_t&)
+        uint64_t hash1()
+        h_rfield_array_ushort_t field_in(h_record_type_t&, h_istring_t&, bool) except+
+
+    cdef cppclass h_c_array_ushort_t "mds::api::const_array_type_handle<mds::api::kind::USHORT>":
+        h_c_array_ushort_t()
+        h_c_array_ushort_t(h_c_array_ushort_t&)
+        h_marray_ushort_t create_array(size_t)
+        # h_c_mushort_t element_type()
+        bool is_same_as(const h_c_array_ushort_t&)
+        uint64_t hash1()
+        h_rfield_array_ushort_t field_in(h_record_type_t&, h_istring_t&, bool) except+
+
+    cdef cppclass h_marray_ushort_t:
+        h_marray_ushort_t()
+        h_marray_ushort_t(h_marray_ushort_t&)
+        mv_ushort frozen_read(size_t)
+        mv_ushort write(size_t, mv_ushort)
+        size_t size()
+        bool has_value()
+        h_marray_base_t as_base()
+        uint64_t hash1()
+        
+        uint16_t add(const size_t&, const uint16_t&)
+        uint16_t sub(const size_t&, const uint16_t&)
+        uint16_t mul(const size_t&, const uint16_t&)
+        uint16_t div(const size_t&, const uint16_t&)
+
+    cdef cppclass h_c_marray_ushort_t:
+        h_c_marray_ushort_t()
+        h_c_marray_ushort_t(h_marray_ushort_t&)
+        mv_ushort frozen_read(size_t)
+        mv_ushort write(size_t, mv_ushort)
+        size_t size()
+        bool has_value()
+        h_marray_base_t as_base()
+        uint64_t hash1()
+
+    h_marray_ushort_t create_ushort_marray(size_t)
+    h_c_marray_ushort_t create_const_ushort_marray(size_t)    
+
+    cdef cppclass h_array_int_t "mds::api::array_type_handle<mds::api::kind::INT>":
+        h_array_int_t()
+        h_array_int_t(h_array_int_t&)
+        h_marray_int_t create_array(size_t)
+        # h_c_mint_t element_type()
+        bool is_same_as(const h_array_int_t&)
+        uint64_t hash1()
+        h_rfield_array_int_t field_in(h_record_type_t&, h_istring_t&, bool) except+
+
+    cdef cppclass h_c_array_int_t "mds::api::const_array_type_handle<mds::api::kind::INT>":
+        h_c_array_int_t()
+        h_c_array_int_t(h_c_array_int_t&)
+        h_marray_int_t create_array(size_t)
+        # h_c_mint_t element_type()
+        bool is_same_as(const h_c_array_int_t&)
+        uint64_t hash1()
+        h_rfield_array_int_t field_in(h_record_type_t&, h_istring_t&, bool) except+
+
+    cdef cppclass h_marray_int_t:
+        h_marray_int_t()
+        h_marray_int_t(h_marray_int_t&)
+        mv_int frozen_read(size_t)
+        mv_int write(size_t, mv_int)
+        size_t size()
+        bool has_value()
+        h_marray_base_t as_base()
+        uint64_t hash1()
+        
+        int32_t add(const size_t&, const int32_t&)
+        int32_t sub(const size_t&, const int32_t&)
+        int32_t mul(const size_t&, const int32_t&)
+        int32_t div(const size_t&, const int32_t&)
+
+    cdef cppclass h_c_marray_int_t:
+        h_c_marray_int_t()
+        h_c_marray_int_t(h_marray_int_t&)
+        mv_int frozen_read(size_t)
+        mv_int write(size_t, mv_int)
+        size_t size()
+        bool has_value()
+        h_marray_base_t as_base()
+        uint64_t hash1()
+
+    h_marray_int_t create_int_marray(size_t)
+    h_c_marray_int_t create_const_int_marray(size_t)    
+
+    cdef cppclass h_array_uint_t "mds::api::array_type_handle<mds::api::kind::UINT>":
+        h_array_uint_t()
+        h_array_uint_t(h_array_uint_t&)
+        h_marray_uint_t create_array(size_t)
+        # h_c_muint_t element_type()
+        bool is_same_as(const h_array_uint_t&)
+        uint64_t hash1()
+        h_rfield_array_uint_t field_in(h_record_type_t&, h_istring_t&, bool) except+
+
+    cdef cppclass h_c_array_uint_t "mds::api::const_array_type_handle<mds::api::kind::UINT>":
+        h_c_array_uint_t()
+        h_c_array_uint_t(h_c_array_uint_t&)
+        h_marray_uint_t create_array(size_t)
+        # h_c_muint_t element_type()
+        bool is_same_as(const h_c_array_uint_t&)
+        uint64_t hash1()
+        h_rfield_array_uint_t field_in(h_record_type_t&, h_istring_t&, bool) except+
+
+    cdef cppclass h_marray_uint_t:
+        h_marray_uint_t()
+        h_marray_uint_t(h_marray_uint_t&)
+        mv_uint frozen_read(size_t)
+        mv_uint write(size_t, mv_uint)
+        size_t size()
+        bool has_value()
+        h_marray_base_t as_base()
+        uint64_t hash1()
+        
+        uint32_t add(const size_t&, const uint32_t&)
+        uint32_t sub(const size_t&, const uint32_t&)
+        uint32_t mul(const size_t&, const uint32_t&)
+        uint32_t div(const size_t&, const uint32_t&)
+
+    cdef cppclass h_c_marray_uint_t:
+        h_c_marray_uint_t()
+        h_c_marray_uint_t(h_marray_uint_t&)
+        mv_uint frozen_read(size_t)
+        mv_uint write(size_t, mv_uint)
+        size_t size()
+        bool has_value()
+        h_marray_base_t as_base()
+        uint64_t hash1()
+
+    h_marray_uint_t create_uint_marray(size_t)
+    h_c_marray_uint_t create_const_uint_marray(size_t)    
+
+    cdef cppclass h_array_long_t "mds::api::array_type_handle<mds::api::kind::LONG>":
+        h_array_long_t()
+        h_array_long_t(h_array_long_t&)
+        h_marray_long_t create_array(size_t)
+        # h_c_mlong_t element_type()
+        bool is_same_as(const h_array_long_t&)
+        uint64_t hash1()
+        h_rfield_array_long_t field_in(h_record_type_t&, h_istring_t&, bool) except+
+
+    cdef cppclass h_c_array_long_t "mds::api::const_array_type_handle<mds::api::kind::LONG>":
+        h_c_array_long_t()
+        h_c_array_long_t(h_c_array_long_t&)
+        h_marray_long_t create_array(size_t)
+        # h_c_mlong_t element_type()
+        bool is_same_as(const h_c_array_long_t&)
+        uint64_t hash1()
+        h_rfield_array_long_t field_in(h_record_type_t&, h_istring_t&, bool) except+
+
+    cdef cppclass h_marray_long_t:
+        h_marray_long_t()
+        h_marray_long_t(h_marray_long_t&)
+        mv_long frozen_read(size_t)
+        mv_long write(size_t, mv_long)
+        size_t size()
+        bool has_value()
+        h_marray_base_t as_base()
+        uint64_t hash1()
+        
+        int64_t add(const size_t&, const int64_t&)
+        int64_t sub(const size_t&, const int64_t&)
+        int64_t mul(const size_t&, const int64_t&)
+        int64_t div(const size_t&, const int64_t&)
+
+    cdef cppclass h_c_marray_long_t:
+        h_c_marray_long_t()
+        h_c_marray_long_t(h_marray_long_t&)
+        mv_long frozen_read(size_t)
+        mv_long write(size_t, mv_long)
+        size_t size()
+        bool has_value()
+        h_marray_base_t as_base()
+        uint64_t hash1()
+
+    h_marray_long_t create_long_marray(size_t)
+    h_c_marray_long_t create_const_long_marray(size_t)    
+
+    cdef cppclass h_array_ulong_t "mds::api::array_type_handle<mds::api::kind::ULONG>":
+        h_array_ulong_t()
+        h_array_ulong_t(h_array_ulong_t&)
+        h_marray_ulong_t create_array(size_t)
+        # h_c_mulong_t element_type()
+        bool is_same_as(const h_array_ulong_t&)
+        uint64_t hash1()
+        h_rfield_array_ulong_t field_in(h_record_type_t&, h_istring_t&, bool) except+
+
+    cdef cppclass h_c_array_ulong_t "mds::api::const_array_type_handle<mds::api::kind::ULONG>":
+        h_c_array_ulong_t()
+        h_c_array_ulong_t(h_c_array_ulong_t&)
+        h_marray_ulong_t create_array(size_t)
+        # h_c_mulong_t element_type()
+        bool is_same_as(const h_c_array_ulong_t&)
+        uint64_t hash1()
+        h_rfield_array_ulong_t field_in(h_record_type_t&, h_istring_t&, bool) except+
+
+    cdef cppclass h_marray_ulong_t:
+        h_marray_ulong_t()
+        h_marray_ulong_t(h_marray_ulong_t&)
+        mv_ulong frozen_read(size_t)
+        mv_ulong write(size_t, mv_ulong)
+        size_t size()
+        bool has_value()
+        h_marray_base_t as_base()
+        uint64_t hash1()
+        
+        uint64_t add(const size_t&, const uint64_t&)
+        uint64_t sub(const size_t&, const uint64_t&)
+        uint64_t mul(const size_t&, const uint64_t&)
+        uint64_t div(const size_t&, const uint64_t&)
+
+    cdef cppclass h_c_marray_ulong_t:
+        h_c_marray_ulong_t()
+        h_c_marray_ulong_t(h_marray_ulong_t&)
+        mv_ulong frozen_read(size_t)
+        mv_ulong write(size_t, mv_ulong)
+        size_t size()
+        bool has_value()
+        h_marray_base_t as_base()
+        uint64_t hash1()
+
+    h_marray_ulong_t create_ulong_marray(size_t)
+    h_c_marray_ulong_t create_const_ulong_marray(size_t)    
+
+    cdef cppclass h_array_float_t "mds::api::array_type_handle<mds::api::kind::FLOAT>":
+        h_array_float_t()
+        h_array_float_t(h_array_float_t&)
+        h_marray_float_t create_array(size_t)
+        # h_c_mfloat_t element_type()
+        bool is_same_as(const h_array_float_t&)
+        uint64_t hash1()
+        h_rfield_array_float_t field_in(h_record_type_t&, h_istring_t&, bool) except+
+
+    cdef cppclass h_c_array_float_t "mds::api::const_array_type_handle<mds::api::kind::FLOAT>":
+        h_c_array_float_t()
+        h_c_array_float_t(h_c_array_float_t&)
+        h_marray_float_t create_array(size_t)
+        # h_c_mfloat_t element_type()
+        bool is_same_as(const h_c_array_float_t&)
+        uint64_t hash1()
+        h_rfield_array_float_t field_in(h_record_type_t&, h_istring_t&, bool) except+
+
+    cdef cppclass h_marray_float_t:
+        h_marray_float_t()
+        h_marray_float_t(h_marray_float_t&)
+        mv_float frozen_read(size_t)
+        mv_float write(size_t, mv_float)
+        size_t size()
+        bool has_value()
+        h_marray_base_t as_base()
+        uint64_t hash1()
+        
+        float add(const size_t&, const float&)
+        float sub(const size_t&, const float&)
+        float mul(const size_t&, const float&)
+        float div(const size_t&, const float&)
+
+    cdef cppclass h_c_marray_float_t:
+        h_c_marray_float_t()
+        h_c_marray_float_t(h_marray_float_t&)
+        mv_float frozen_read(size_t)
+        mv_float write(size_t, mv_float)
+        size_t size()
+        bool has_value()
+        h_marray_base_t as_base()
+        uint64_t hash1()
+
+    h_marray_float_t create_float_marray(size_t)
+    h_c_marray_float_t create_const_float_marray(size_t)    
+
+    cdef cppclass h_array_double_t "mds::api::array_type_handle<mds::api::kind::DOUBLE>":
+        h_array_double_t()
+        h_array_double_t(h_array_double_t&)
+        h_marray_double_t create_array(size_t)
+        # h_c_mdouble_t element_type()
+        bool is_same_as(const h_array_double_t&)
+        uint64_t hash1()
+        h_rfield_array_double_t field_in(h_record_type_t&, h_istring_t&, bool) except+
+
+    cdef cppclass h_c_array_double_t "mds::api::const_array_type_handle<mds::api::kind::DOUBLE>":
+        h_c_array_double_t()
+        h_c_array_double_t(h_c_array_double_t&)
+        h_marray_double_t create_array(size_t)
+        # h_c_mdouble_t element_type()
+        bool is_same_as(const h_c_array_double_t&)
+        uint64_t hash1()
+        h_rfield_array_double_t field_in(h_record_type_t&, h_istring_t&, bool) except+
+
+    cdef cppclass h_marray_double_t:
+        h_marray_double_t()
+        h_marray_double_t(h_marray_double_t&)
+        mv_double frozen_read(size_t)
+        mv_double write(size_t, mv_double)
+        size_t size()
+        bool has_value()
+        h_marray_base_t as_base()
+        uint64_t hash1()
+        
+        double add(const size_t&, const double&)
+        double sub(const size_t&, const double&)
+        double mul(const size_t&, const double&)
+        double div(const size_t&, const double&)
+
+    cdef cppclass h_c_marray_double_t:
+        h_c_marray_double_t()
+        h_c_marray_double_t(h_marray_double_t&)
+        mv_double frozen_read(size_t)
+        mv_double write(size_t, mv_double)
+        size_t size()
+        bool has_value()
+        h_marray_base_t as_base()
+        uint64_t hash1()
+
+    h_marray_double_t create_double_marray(size_t)
+    h_c_marray_double_t create_const_double_marray(size_t)    
+
+    cdef cppclass h_array_string_t "mds::api::array_type_handle<mds::api::kind::STRING>":
+        h_array_string_t()
+        h_array_string_t(h_array_string_t&)
+        h_marray_string_t create_array(size_t)
+        # h_c_mstring_t element_type()
+        bool is_same_as(const h_array_string_t&)
+        uint64_t hash1()
+        h_rfield_array_string_t field_in(h_record_type_t&, h_istring_t&, bool) except+
+
+    cdef cppclass h_c_array_string_t "mds::api::const_array_type_handle<mds::api::kind::STRING>":
+        h_c_array_string_t()
+        h_c_array_string_t(h_c_array_string_t&)
+        h_marray_string_t create_array(size_t)
+        # h_c_mstring_t element_type()
+        bool is_same_as(const h_c_array_string_t&)
+        uint64_t hash1()
+        h_rfield_array_string_t field_in(h_record_type_t&, h_istring_t&, bool) except+
+
+    cdef cppclass h_marray_string_t:
+        h_marray_string_t()
+        h_marray_string_t(h_marray_string_t&)
+        mv_string frozen_read(size_t)
+        mv_string write(size_t, mv_string)
+        size_t size()
+        bool has_value()
+        h_marray_base_t as_base()
+        uint64_t hash1()
+        
+    cdef cppclass h_c_marray_string_t:
+        h_c_marray_string_t()
+        h_c_marray_string_t(h_marray_string_t&)
+        mv_string frozen_read(size_t)
+        mv_string write(size_t, mv_string)
+        size_t size()
+        bool has_value()
+        h_marray_base_t as_base()
+        uint64_t hash1()
+
+    h_marray_string_t create_string_marray(size_t)
+    h_c_marray_string_t create_const_string_marray(size_t)    
+
+    cdef cppclass h_array_record_t "mds::api::array_type_handle<mds::api::kind::RECORD>":
+        h_array_record_t()
+        h_array_record_t(h_array_record_t&)
+        h_marray_record_t create_array(size_t)
+        # h_c_mrecord_t element_type()
+        bool is_same_as(const h_array_record_t&)
+        uint64_t hash1()
+        h_rfield_array_record_t field_in(h_record_type_t&, h_istring_t&, bool) except+
+
+    cdef cppclass h_c_array_record_t "mds::api::const_array_type_handle<mds::api::kind::RECORD>":
+        h_c_array_record_t()
+        h_c_array_record_t(h_c_array_record_t&)
+        h_marray_record_t create_array(size_t)
+        # h_c_mrecord_t element_type()
+        bool is_same_as(const h_c_array_record_t&)
+        uint64_t hash1()
+        h_rfield_array_record_t field_in(h_record_type_t&, h_istring_t&, bool) except+
+
+    cdef cppclass h_marray_record_t:
+        h_marray_record_t()
+        h_marray_record_t(h_marray_record_t&)
+        mv_record frozen_read(size_t)
+        mv_record write(size_t, mv_record)
+        size_t size()
+        bool has_value()
+        h_marray_base_t as_base()
+        uint64_t hash1()
+        
+    cdef cppclass h_c_marray_record_t:
+        h_c_marray_record_t()
+        h_c_marray_record_t(h_marray_record_t&)
+        mv_record frozen_read(size_t)
+        mv_record write(size_t, mv_record)
+        size_t size()
+        bool has_value()
+        h_marray_base_t as_base()
+        uint64_t hash1()
+
+    h_marray_record_t create_record_marray(size_t)
+    h_c_marray_record_t create_const_record_marray(size_t)    
 # END INJECTION
 
 # START INJECTION | tmpl_array_downcast(Primitives,Composites)
+    h_marray_bool_t downcast_marray_bool(h_marray_base_t&)
+    h_marray_byte_t downcast_marray_byte(h_marray_base_t&)
+    h_marray_ubyte_t downcast_marray_ubyte(h_marray_base_t&)
+    h_marray_short_t downcast_marray_short(h_marray_base_t&)
+    h_marray_ushort_t downcast_marray_ushort(h_marray_base_t&)
+    h_marray_int_t downcast_marray_int(h_marray_base_t&)
+    h_marray_uint_t downcast_marray_uint(h_marray_base_t&)
+    h_marray_long_t downcast_marray_long(h_marray_base_t&)
+    h_marray_ulong_t downcast_marray_ulong(h_marray_base_t&)
+    h_marray_float_t downcast_marray_float(h_marray_base_t&)
+    h_marray_double_t downcast_marray_double(h_marray_base_t&)
+    h_marray_string_t downcast_marray_string(h_marray_base_t&)
+    h_marray_record_t downcast_marray_record(h_marray_base_t&)
 # END INJECTION
